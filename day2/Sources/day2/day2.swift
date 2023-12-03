@@ -1,5 +1,8 @@
 import Foundation
 
+// 12 red cubes, 13 green cubes, and 14 blue cubes
+let cubeSet = ["red": 12, "green": 13, "blue": 14]
+
 struct Game {
     static let COLORS = ["red", "green", "blue"]
     let id: Int
@@ -60,14 +63,11 @@ struct Game {
 }
 
 func sumPossibleIDs(input: String, cubeSet: [String: Int]) -> Int {
-    let games = input.split(separator: "\n")
+    input.split(separator: "\n")
         .map { Game(String($0)) }
-    
-    let possibleGames = games.filter {
-        $0.gameIsPossible(with: cubeSet)
-    }
-    
-    return possibleGames
+        .filter {
+            $0.gameIsPossible(with: cubeSet)
+        }
         .map { $0.id }
         .reduce(0, +)
 }
