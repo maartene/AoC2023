@@ -1,51 +1,6 @@
 import XCTest
 @testable import day5
 
-struct Map {
-        let destinationRangeStart : Int
-        let sourceRangeStart: Int
-        let rangeLength: Int
-
-        func sourceIsInRange(_ source: Int) -> Bool {
-            source >= sourceRangeStart && source < sourceRangeStart + rangeLength 
-        }
-
-        func getDestinationFor(_ source: Int) -> Int {
-            if sourceIsInRange(source) {
-                let offset = source - sourceRangeStart
-                return destinationRangeStart + offset
-            } else {
-                return source
-            }
-        }
-
-        init(input: String) {
-            let numbers = input.split(seperator: " ")
-                .map { String($0) }
-                .compactMap { Int($0) }
-
-        }   
-    }
-
-func mapSeedToSoil(_ seed: Int, in input: String) -> Int {
-    
-
-    let maps = [
-        
-        Map(destinationRangeStart: 50, sourceRangeStart: 98, rangeLength: 2),
-        Map(destinationRangeStart: 52, sourceRangeStart: 50, rangeLength: 48)
-    ]
-
-    if let relevantMap = maps.first(where: { $0.sourceIsInRange(seed)} ) {
-        return relevantMap.getDestinationFor(seed)
-    } 
-    return seed
-}
-
-func seedToLocation(_ seed: Int, in input: String) -> Int {
-    0
-}
-
 final class day5Tests: XCTestCase {
     let exampleInput = 
     """
@@ -100,11 +55,30 @@ final class day5Tests: XCTestCase {
     }
 
     func test_seedToLocationMap() {
-        let expected = [79:82, 14:43, 82:86, 35:35]
+        let expected = [79:82, 14:43, 55:86, 13:35]
 
         for pair in expected {
             XCTAssertEqual(seedToLocation(pair.key, in: exampleInput), pair.value)
         }
         
+    }
+    
+    func test_calculateLowestLocation() {
+        XCTAssertEqual(calculateLowestLocation(exampleInput), 35)
+    }
+    
+    func test_part1() {
+        let result = calculateLowestLocation(input)
+        print(result)
+    }
+    
+    // MARK: Part 2
+    func test_calculateLowestLocation_part2() {
+        XCTAssertEqual(calculateLowestLocation_part2(exampleInput), 46)
+    }
+    
+    func test_part2() {
+        let result = calculateLowestLocation_part2(input)
+        print(result)
     }
 }
