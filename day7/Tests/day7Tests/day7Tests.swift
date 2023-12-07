@@ -133,7 +133,7 @@ final class day7Tests: XCTestCase {
 
     func test_part2() {
         let result = totalBid_part2(input)
-        print(result)
+        //print(result)
         XCTAssertEqual(result, 245576185)
     }
 }
