@@ -1,7 +1,24 @@
 import XCTest
 @testable import day7
 
-enum HandType: Int, CaseIterable {
+func getValueForCard(_ card: Character) -> Int {
+    switch card {
+    case "T":
+        return 10
+    case "J":
+        return 11
+    case "Q":
+        return 12
+    case "K":
+        return 13
+    case "A":
+        return 14
+    default:
+        return Int(String(card))!
+    }
+}
+
+enum HandType: Int {
     case highCard
     case onePair
     case twoPair
@@ -22,7 +39,7 @@ struct Hand {
         let words = cardString.split(separator: " ").map { String($0) }
         self.cardString = words[0]
         bid = Int(words[1])!
-        cards = cardString.map { $0 }
+        cards = self.cardString.map { $0 }
     }
 
     var handType: HandType {
@@ -69,7 +86,7 @@ func rankHands(_ hands: [Hand]) -> [Int] {
         }
 
         if h1.cards[i] != h2.cards[i] {
-            return h1.cards[i] > h2.cards[i]
+            return getValueForCard(h1.cards[i]) < getValueForCard(h2.cards[i])
         }
 
         return true
@@ -120,6 +137,11 @@ final class day7Tests: XCTestCase {
     QQQJA 483
     """
 
+    func test_handType_forKTJJT() {
+        let hand = Hand("KTJJT 2210")
+        XCTAssertEqual(hand.handType, .twoPair)
+    }
+
     func test_handType() {
         let expected: [String: HandType] = [
             "TTTTT 0": .fiveOfAKind,
@@ -151,7 +173,7 @@ final class day7Tests: XCTestCase {
         let expected = [1, 4, 3, 2, 5]
         
         let hands = inputToHands(exampleInput)
-        print(hands)
+        //print(hands)
 
         let result = rankHands(hands)
         XCTAssertEqual(result.count, expected.count)
@@ -163,5 +185,10 @@ final class day7Tests: XCTestCase {
     func test_totalBid_withExampleInput() {
         let result = totalBid(exampleInput)
         XCTAssertEqual(result, 6440)
+    }
+
+    func test_part1() {
+        let result = totalBid(input)
+        print("Result: \(result)")
     }
 }
