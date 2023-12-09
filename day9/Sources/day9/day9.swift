@@ -11,7 +11,17 @@ func differences(_ sequence: [Int]) -> [Int] {
 func allZeroes(_ sequence: [Int]) -> Bool {
     sequence.filter { $0 != 0 }.count == 0
 }
- 
+
+func inputToSequences(_ input: String) -> [[Int]] {
+    let lines = input.split(separator: "\n").map { String($0) }
+    return lines.map { line in
+        line.split(separator: " ")
+            .map { String($0) }
+            .compactMap { Int($0) }
+    }
+}
+
+// MARK: Part 1
 func predictNext(_ sequence: [Int]) -> Int {
     var sequences = [sequence]
     
@@ -33,15 +43,6 @@ func predictNext(_ sequence: [Int]) -> Int {
     }
         
     return sequences[0].last!
-}
-
-func inputToSequences(_ input: String) -> [[Int]] {
-    let lines = input.split(separator: "\n").map { String($0) }
-    return lines.map { line in
-        line.split(separator: " ")
-            .map { String($0) }
-            .compactMap { Int($0) }
-    }
 }
 
 func sumPredictedNumbers(_ input: String) -> Int {
