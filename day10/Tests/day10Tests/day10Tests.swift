@@ -216,27 +216,19 @@ final class day10Tests: XCTestCase {
         }
     }
     
-    func test_map_findEnclosedTiles_with_exampleInput_part2_3() {
-        let map = Map(exampleInput_part2_3)
-        let map3x = map.scale3()
-        let result = map3x.findEnclosedTiles()
-        XCTAssertEqual(result.count, 8)
+    func test_findEnclosedTilesCount_with_exampleInput_part2_3() {
+        let result = findEnclosedTilesCount(exampleInput_part2_3)
+        XCTAssertEqual(result, 8)
     }
     
-    func test_map_findEnclosedTiles_with_exampleInput_part2_4() {
-        let map = Map(exampleInput_part2_4)
-        let substitutedMap = map.substitutePath()
-        let map3x = substitutedMap.scale3()
-        let result = map3x.findEnclosedTiles()
-        XCTAssertEqual(result.count, 10)
+    func test_findEnclosedTilesCount_with_exampleInput_part2_4() {
+        let result = findEnclosedTilesCount(exampleInput_part2_4)
+        XCTAssertEqual(result, 10)
     }
     
     func test_part2() {
-        let map = Map(input)
-        let substitutedMap = map.substitutePath()
-        let map3x = substitutedMap.scale3()
-        let result = map3x.findEnclosedTiles()
-        XCTAssertEqual(result.count, 407)
+        let result = findEnclosedTilesCount(input)
+        XCTAssertEqual(result, 407)
     }
 }
 

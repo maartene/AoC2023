@@ -223,3 +223,11 @@ extension Map {
         return Map(nodes: updatedNodes, colCount: colCount * 3, rowCount: rowCount * 3, startingPosition: startingPosition * 3)
     }
 }
+
+func findEnclosedTilesCount(_ input: String) -> Int {
+    let map = Map(input)
+    let substitutedMap = map.substitutePath()
+    let map3x = substitutedMap.scale3()
+    let result = map3x.findEnclosedTiles()
+    return result.count
+}
