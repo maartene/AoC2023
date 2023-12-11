@@ -21,16 +21,16 @@ final class day11Tests: XCTestCase {
         XCTAssertEqual(universe.description, exampleInput)
     }
     
-    func test_universe_findRowsToExpand() {
+    func test_universe_rowsToExpand() {
         let universe = Universe(exampleInput)
         
-        XCTAssertEqual(universe.findRowsToExpand().sorted(), [3,7])
+        XCTAssertEqual(universe.rowsToExpand.sorted(), [3,7])
     }
     
-    func test_universe_findColsToExpand() {
+    func test_universe_colsToExpand() {
         let universe = Universe(exampleInput)
         
-        XCTAssertEqual(universe.findColsToExpand().sorted(), [2,5,8])
+        XCTAssertEqual(universe.colsToExpand.sorted(), [2,5,8])
     }
     
     func test_universe_shortestPathLengthBetweenGalaxies() {
