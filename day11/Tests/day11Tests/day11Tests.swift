@@ -93,6 +93,12 @@ final class day11Tests: XCTestCase {
     }
     
     // MARK: Part 2
+    func test_part1_usingPart2() {
+        let universe = Universe(input)
+        let result = universe.sumOfShortestPathsBetweenAllGalaxies_part2(expandMultiplier: 2)
+        XCTAssertEqual(result, 10165598)
+    }
+    
     func test_universe_sumOfShortestPathsBetweenAllGalaxies_part2_withMultiplier10() {
         let universe = Universe(exampleInput)
         
