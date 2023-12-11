@@ -60,45 +60,8 @@ struct Universe {
         
         return colsToExpand
     }
-
-    func expandUniverse() -> Universe {
-        let rowsToExpand = findRowsToExpand()
-        let colsToExpand = findColsToExpand()
         
-        var expandedCells = self.cells
-        
-        // expand rows
-        for (index, row) in cells.enumerated().reversed() {
-            if rowsToExpand.contains(index) {
-                expandedCells.insert(row, at: index)
-            }
-        }
-        
-        // expand cols
-        for colOffset in 0 ..< cells[0].count {
-            let col = cells[0].count - 1 - colOffset
-            if colsToExpand.contains(col) {
-                for row in 0 ..< expandedCells.count {
-                    expandedCells[row].insert(".", at: col)
-                }
-            }
-        }
-        
-        return Universe(cells: expandedCells)
-    }
-    
-    func findShortestPathLength(from: Int, to: [Int]) -> [Int] {
-        let fromLocation = galaxies[from]!
-        let targets = to.compactMap { galaxies[$0] }
-        //let dijkstra = dijkstra2(target: fromLocation)
-        
-        return targets.map { target in
-            abs(target.y - fromLocation.y) + abs(target.x - fromLocation.x)
-        }
-        
-    }
-        
-    func sumOfShortestPathsBetweenAllGalaxies() -> Int {
+    func sumOfShortestPathsBetweenAllGalaxies(expandMultiplier: Int) -> Int {
         var galaxiesToCheck = Set(galaxies.map { $0.key })
         
         var shortestPathSum = 0
@@ -107,7 +70,7 @@ struct Universe {
             //print("Checking galaxy: \(currentGalaxy)")
             galaxiesToCheck.remove(currentGalaxy)
                         
-            let shortestPathsForGalaxy = findShortestPathLength(from: currentGalaxy, to: Array(galaxiesToCheck))
+            let shortestPathsForGalaxy = findShortestPathLength(from: currentGalaxy, to: Array(galaxiesToCheck), expandMultiplier: expandMultiplier)
             let shortestPathSumForGalaxy = shortestPathsForGalaxy.reduce(0, +)
             shortestPathSum += shortestPathSumForGalaxy
         }
@@ -115,26 +78,7 @@ struct Universe {
         return shortestPathSum
     }
     
-    // MARK: Part 2
-    
-    func sumOfShortestPathsBetweenAllGalaxies_part2(expandMultiplier: Int) -> Int {
-        var galaxiesToCheck = Set(galaxies.map { $0.key })
-        
-        var shortestPathSum = 0
-        while galaxiesToCheck.isEmpty == false {
-            let currentGalaxy = galaxiesToCheck.first!
-            //print("Checking galaxy: \(currentGalaxy)")
-            galaxiesToCheck.remove(currentGalaxy)
-                        
-            let shortestPathsForGalaxy = findShortestPathLength_part2(from: currentGalaxy, to: Array(galaxiesToCheck), expandMultiplier: expandMultiplier)
-            let shortestPathSumForGalaxy = shortestPathsForGalaxy.reduce(0, +)
-            shortestPathSum += shortestPathSumForGalaxy
-        }
-        
-        return shortestPathSum
-    }
-    
-    func findShortestPathLength_part2(from: Int, to: [Int], expandMultiplier: Int) -> [Int] {
+    func findShortestPathLength(from: Int, to: [Int], expandMultiplier: Int) -> [Int] {
         let fromLocation = galaxies[from]!
         let targets = to.compactMap { galaxies[$0] }
         //let dijkstra = dijkstra2(target: fromLocation)
@@ -151,7 +95,6 @@ struct Universe {
             
             let colsToExpandCount = colsToExpand.filter { (minX ... maxX).contains($0) }.count
             
-            //let numberOfExpandedRows = rowsToExpand.filter { }
             return maxX - minX - colsToExpandCount + colsToExpandCount * expandMultiplier + maxY - minY - rowsToExpandCount + rowsToExpandCount * expandMultiplier
         }
         

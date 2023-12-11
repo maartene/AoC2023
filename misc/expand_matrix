@@ -1,0 +1,25 @@
+func expandUniverse() -> Universe {
+        let rowsToExpand = findRowsToExpand()
+        let colsToExpand = findColsToExpand()
+        
+        var expandedCells = self.cells
+        
+        // expand rows
+        for (index, row) in cells.enumerated().reversed() {
+            if rowsToExpand.contains(index) {
+                expandedCells.insert(row, at: index)
+            }
+        }
+        
+        // expand cols
+        for colOffset in 0 ..< cells[0].count {
+            let col = cells[0].count - 1 - colOffset
+            if colsToExpand.contains(col) {
+                for row in 0 ..< expandedCells.count {
+                    expandedCells[row].insert(".", at: col)
+                }
+            }
+        }
+        
+        return Universe(cells: expandedCells)
+    }
