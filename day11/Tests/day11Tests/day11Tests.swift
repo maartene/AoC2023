@@ -20,6 +20,26 @@ final class day11Tests: XCTestCase {
         let universe = Universe(exampleInput)
         XCTAssertEqual(universe.description, exampleInput)
     }
+
+    func test_universe_findGalaxies() {
+        let universe = Universe(exampleInput)
+        let expectedGalaxies = [
+            1: Vector2D(x: 3, y: 0), 
+            2: Vector2D(x: 7, y: 1), 
+            3: Vector2D(x: 0, y: 2), 
+            4: Vector2D(x: 6, y: 4), 
+            5: Vector2D(x: 1, y: 5),
+            6: Vector2D(x: 9, y: 6), 
+            7: Vector2D(x: 7, y: 8), 
+            8: Vector2D(x: 0, y: 9), 
+            9: Vector2D(x: 4, y: 9), 
+        ]
+        
+        XCTAssertEqual(universe.galaxies.count, expectedGalaxies.count)
+        for (key, value) in expectedGalaxies {
+            XCTAssertEqual(universe.galaxies[key], value)
+        }
+    }
     
     func test_universe_rowsToExpand() {
         let universe = Universe(exampleInput)

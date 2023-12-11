@@ -17,12 +17,23 @@ struct Universe {
         self.init(cells: cells)
     }
     
-    init(cells: [[String]]) {
+    private init(cells: [[String]]) {
         self.cells = cells
         
         rowCount = cells.count
-        colCount = cells[0].count
+        colCount = cells.first?.count ?? 0
         
+        galaxies = Self.findGalaxies(cells: cells)
+
+        rowsToExpand = Self.findRowsToExpand(cells: cells)
+        colsToExpand = Self.findColsToExpand(cells: cells)
+
+    }
+
+    static func findGalaxies(cells: [[String]]) -> [Int: Vector2D] {
+        let rowCount = cells.count 
+        let colCount = cells.first?.count ?? 0
+
         var galaxyID = 1
         var foundGalaxies = [Int: Vector2D]()
         for y in 0 ..< rowCount {
@@ -33,11 +44,7 @@ struct Universe {
                 }
             }
         }
-        self.galaxies = foundGalaxies
-
-        rowsToExpand = Self.findRowsToExpand(cells: cells)
-        colsToExpand = Self.findColsToExpand(cells: cells)
-
+        return foundGalaxies
     }
     
     static func findRowsToExpand(cells: [[String]]) -> [Int] {
@@ -94,12 +101,10 @@ struct Universe {
             let maxY = max(target.y, fromLocation.y)
             
             let rowsToExpandCount = rowsToExpand.filter { (minY ... maxY).contains($0) }.count
-            
             let colsToExpandCount = colsToExpand.filter { (minX ... maxX).contains($0) }.count
             
             return maxX - minX - colsToExpandCount + colsToExpandCount * expandMultiplier + maxY - minY - rowsToExpandCount + rowsToExpandCount * expandMultiplier
         }
-        
     }
 }
 
