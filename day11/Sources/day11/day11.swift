@@ -31,47 +31,75 @@ struct Universe {
     }
 
     static func findGalaxies(cells: [[String]]) -> [Int: Vector2D] {
-        let rowCount = cells.count 
-        let colCount = cells.first?.count ?? 0
-
-        var galaxyID = 1
-        var foundGalaxies = [Int: Vector2D]()
-        for y in 0 ..< rowCount {
-            for x in 0 ..< colCount {
-                if cells[y][x] == "#" {
-                    foundGalaxies[galaxyID] = Vector2D(x: x, y: y)
-                    galaxyID += 1
+        // CoPilot suggested functional approach:
+        let galaxies = cells.enumerated()
+            .reduce(into: [Int: Vector2D](), { (result, row) in
+                let (y, cellsRow) = row
+                cellsRow.enumerated().forEach { (x, cell) in
+                    if cell == "#" {
+                        let galaxyID = result.count + 1
+                        result[galaxyID] = Vector2D(x: x, y: y)
+                    }
                 }
-            }
-        }
-        return foundGalaxies
+        })
+        return galaxies
+
+        // Original (procedural) approach:
+        // let rowCount = cells.count 
+        // let colCount = cells.first?.count ?? 0
+
+        // var galaxyID = 1
+        // var foundGalaxies = [Int: Vector2D]()
+        // for y in 0 ..< rowCount {
+        //     for x in 0 ..< colCount {
+        //         if cells[y][x] == "#" {
+        //             foundGalaxies[galaxyID] = Vector2D(x: x, y: y)
+        //             galaxyID += 1
+        //         }
+        //     }
+        // }
+        // return foundGalaxies
     }
     
     static func findRowsToExpand(cells: [[String]]) -> [Int] {
-        var rowsToExpand = [Int]()
-        for (index, row) in cells.enumerated() {
-            if row.contains("#") == false {
-                rowsToExpand.append(index)
+        (0 ..< cells.count)
+            .filter { row in
+                cells[row].contains("#") == false
             }
-        }
+
+        // My original (procedural) approach:
+        // var rowsToExpand = [Int]()
+        // for (index, row) in cells.enumerated() {
+        //     if row.contains("#") == false {
+        //         rowsToExpand.append(index)
+        //     }
+        // }
         
-        return rowsToExpand
+        // return rowsToExpand
     }
 
     static func findColsToExpand(cells: [[String]]) -> [Int] {
-        var colsToExpand = [Int]()
-        for col in 0 ..< cells[0].count {
-            var empty = true
-            for row in 0 ..< cells.count {
-                empty = cells[row][col] == "." && empty
-            }
+        // My original (procedural) approach:
+        // var colsToExpand = [Int]()
+        // for col in 0 ..< cells[0].count {
+        //     var empty = true
+        //     for row in 0 ..< cells.count {
+        //         empty = cells[row][col] == "." && empty
+        //     }
             
-            if empty {
-                colsToExpand.append(col)
-            }
-        }
+        //     if empty {
+        //         colsToExpand.append(col)
+        //     }
+        // }
         
-        return colsToExpand
+        // return colsToExpand
+
+
+        // GitHub CoPilot suggested functional approach:
+        (0 ..< cells[0].count)
+            .filter { col in
+                cells.reduce(true) { $0 && $1[col] == "." }
+            }
     }
         
     func sumOfShortestPathsBetweenAllGalaxies(expandMultiplier: Int) -> Int {
