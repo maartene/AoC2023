@@ -10,7 +10,7 @@ func pow2(_ exponent: Int) -> Int {
     return result
 }
 
-func calculatePermutations(_ inputString: String, continuousGroups: [Int]) throws -> [String] {
+func calculatePermutations(_ inputString: String, continuousGroups: [Int]) throws -> Int {
     
     // naive approach
     
@@ -20,7 +20,20 @@ func calculatePermutations(_ inputString: String, continuousGroups: [Int]) throw
     
     let questionMarkCount = inputArray.filter( { $0 == "?" } ).count
     
-    var possibleCases = [String]()
+    var regexString = "^(\\.*)"
+    for i in 0 ..< continuousGroups.count {
+        for _ in 0 ..< continuousGroups[i] {
+            regexString += "#"
+        }
+        regexString += i == continuousGroups.count - 1 ? "(\\.*)\\Z" : "(\\.+)"
+    }
+    // and filter the ones that fit regular expression
+    //let regex = try Regex("^(\\.*)#(\\.+)#(\\.+)###(\\.*)")
+    //assert(regexString == "^(\\.*)#(\\.+)#(\\.+)###(\\.*)")
+    let regex = try Regex(regexString)
+    //let result = possibleCases.filter { $0.contains(regex) }
+    
+    var possibleCases = 0
     for i in 0 ..< pow2(questionMarkCount) {
         var possibleCase = inputArray
         let binaryString = String(String(i, radix: 2).reversed()).padding(toLength: questionMarkCount, withPad: "0", startingAt: 0)
@@ -37,7 +50,9 @@ func calculatePermutations(_ inputString: String, continuousGroups: [Int]) throw
                 qmIndex += 1
             }
         }
-        possibleCases.append(possibleCase.joined())
+        if possibleCase.joined().contains(regex) {
+            possibleCases += 1
+        }
     }
     
     //print(possibleCases)
@@ -56,20 +71,9 @@ func calculatePermutations(_ inputString: String, continuousGroups: [Int]) throw
     // let result = try calculatePermutations("?###????????", continuousGroups: [3,2,1])
     //let compareString = "^(\\.*)###(\\.+)##(\\.+)#(\\.*)\\Z"
     
-    var regexString = "^(\\.*)"
-    for i in 0 ..< continuousGroups.count {
-        for _ in 0 ..< continuousGroups[i] {
-            regexString += "#"
-        }
-        regexString += i == continuousGroups.count - 1 ? "(\\.*)\\Z" : "(\\.+)"
-    }
-    // and filter the ones that fit regular expression
-    //let regex = try Regex("^(\\.*)#(\\.+)#(\\.+)###(\\.*)")
-    //assert(regexString == "^(\\.*)#(\\.+)#(\\.+)###(\\.*)")
-    let regex = try Regex(regexString)
-    let result = possibleCases.filter { $0.contains(regex) }
+    
     //print(result)
-    return result
+    return possibleCases
 }
 
 func countPermutations(_ input: String) throws -> [Int] {
@@ -83,11 +87,17 @@ func countPermutations(_ input: String) throws -> [Int] {
         let groups = lineSplits[1].split(separator: ",").compactMap {
             Int(String($0))
         }
-        result.append(try calculatePermutations(inputString, continuousGroups: groups).count)
+        result.append(try calculatePermutations(inputString, continuousGroups: groups))
         print("\(Double(result.count) / Double(lines.count) * 100)%")
     }
 
     return result
+}
+
+func sumCountPermutations(_ input: String) throws -> Int {
+    let counts = try countPermutations(input)
+
+    return counts.reduce(0, +)
 }
 
 final class day12Tests: XCTestCase {
@@ -110,13 +120,8 @@ final class day12Tests: XCTestCase {
     }
     
     func test_permutations_forSpecificCase1() throws {
-        let expected = [
-            "#.#.###"
-        ]
-        
         let result = try calculatePermutations("???.###", continuousGroups: [1,1,3])
-        print(result)
-        compareArrayContents(result, expected)
+        XCTAssertEqual(result, 1)
     }
     
     func test_permutations_withExampleInput() throws {
@@ -127,24 +132,20 @@ final class day12Tests: XCTestCase {
     }
     
     func test_permutations_forSpecificCase3() throws {
-        let expected = [
-            ".###.##.#...",
-            ".###.##..#..",
-            ".###.##...#.",
-            ".###.##....#",
-            ".###..##.#..",
-            ".###..##..#.",
-            ".###..##...#",
-            ".###...##.#.",
-            ".###...##..#",
-            ".###....##.#"
-        ]
-        
         let result = try calculatePermutations("?###????????", continuousGroups: [3,2,1])
-        compareArrayContents(result, expected)
+        XCTAssertEqual(result, 10)
     }
     
+    func test_sumCountPermutations_withExampleInput() throws {
+        let result = try sumCountPermutations(exampleInput)
+        XCTAssertEqual(result, 21)
+    }
     
+    func test_part1() throws {
+        let result = try sumCountPermutations(input)
+        print(result)
+        XCTAssertEqual(result, 6981)
+    }
     
 //    func test_countQuestionMarks() {
 //        let lines = input.split(separator: "\n").map { String($0) }
