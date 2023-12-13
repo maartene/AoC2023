@@ -120,6 +120,7 @@ final class day13Tests: XCTestCase {
         XCTAssertEqual(result, 400)
     }
     
+    // 2.6s with caching, 8s without caching
     func test_part2() {
         let result = calculateCheckSumWithFlipping(input)
         XCTAssertEqual(result, 37876)

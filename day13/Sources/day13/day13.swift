@@ -1,10 +1,11 @@
 import Foundation
 
-struct MountainRange {
+class MountainRange {
     let matrix: [[Bool]]
     
     var cacheCompareColumns = [Vector2D: Bool]()
     var cacheCompareRows = [Vector2D: Bool]()
+    var cacheHitCount = 0
     
     let width: Int
     let height: Int
@@ -24,14 +25,29 @@ struct MountainRange {
             return true
         }
         
+        var canUseCache = true
+        if let flipLocation {
+            canUseCache = col1 != flipLocation.x && col2 != flipLocation.x
+        }
+        
+        if canUseCache, let cachedValue = cacheCompareColumns[Vector2D(x: col1, y: col2)] {
+            cacheHitCount += 1
+            return cachedValue
+        }
+        
+        var result = true
         for y in 0 ..< matrix.count {
             let value1 = flipLocation?.x == col1 && flipLocation?.y == y ? !matrix[y][col1] : matrix[y][col1]
             let value2 = flipLocation?.x == col2 && flipLocation?.y == y ? !matrix[y][col2] : matrix[y][col2]
             if value1 != value2 {
-                return false
+                result = false
             }
         }
-        return true
+        
+        if canUseCache {
+            cacheCompareColumns[Vector2D(x: col1, y: col2)] = result
+        }
+        return result
     }
 
     func isVerticalMirror(col: Int, flipLocation: Vector2D? = nil) -> Bool {
@@ -66,14 +82,29 @@ struct MountainRange {
             return true
         }
         
+        var canUseCache = true
+        if let flipLocation {
+            canUseCache = row1 != flipLocation.y && row2 != flipLocation.y
+        }
+        
+        if canUseCache, let cachedValue = cacheCompareRows[Vector2D(x: row1, y: row2)] {
+            cacheHitCount += 1
+            return cachedValue
+        }
+        
+        var result = true
         for x in 0 ..< width {
             let value1 = flipLocation?.x == x && flipLocation?.y == row1 ? !matrix[row1][x] : matrix[row1][x]
             let value2 = flipLocation?.x == x && flipLocation?.y == row2 ? !matrix[row2][x] : matrix[row2][x]
             if value1 != value2 {
-                return false
+                result = false
             }
         }
-        return true
+        
+        if canUseCache {
+            cacheCompareRows[Vector2D(x: row1, y: row2)] = result
+        }
+        return result
     }
 
     func isHorizontalMirror(row: Int, flipLocation: Vector2D? = nil) -> Bool {
@@ -127,13 +158,14 @@ func calculateCheckSum(_ input: String) -> Int {
     let boards = createMountainRangesFromInput(input)
     
     let verticalMirrors = boards.compactMap {
-        $0.findVerticalReflection()
+        return $0.findVerticalReflection()
     }.map { ($0 + 1) * 1 }
     
     let horizontalMirrors = boards.compactMap {
-        $0.findHorizontalReflection()
+        return $0.findHorizontalReflection()
     }.map { ($0 + 1) * 100 }
     
+    print("Cached count: \(boards.reduce(0) { $0 + $1.cacheHitCount })")
     return verticalMirrors.reduce(0, +) + horizontalMirrors.reduce(0, +)
 }
 
@@ -149,11 +181,11 @@ extension MountainRange {
         
         for y in 0 ..< height {
             for x in 0 ..< width {
-                if row == nil && col == nil, let r = findHorizontalReflection(flipLocation: Vector2D(x: x, y: y), ignoreRow: existingRow), r != existingRow {
+                if row == nil && col == nil, let r = findHorizontalReflection(flipLocation: Vector2D(x: x, y: y), ignoreRow: existingRow) {
                     row = r
                 }
                 
-                if col == nil && row == nil, let c = findVerticalReflection(flipLocation: Vector2D(x: x, y: y), ignoreColumn: existingCol), c != existingCol {
+                if col == nil && row == nil, let c = findVerticalReflection(flipLocation: Vector2D(x: x, y: y), ignoreColumn: existingCol) {
                     col = c
                 }
             }
@@ -169,7 +201,7 @@ func calculateCheckSumWithFlipping(_ input: String) -> Int {
     
     var checksums = [Int]()
     for i in 0 ..< boards.count {
-        print("\(Double(i)/Double(boards.count) * 100)%")
+        //print("\(Double(i)/Double(boards.count) * 100)%")
         let reflection = boards[i].findReflectionWithFlipping()
         var checksum = 0
         if let col = reflection.col {
@@ -180,6 +212,7 @@ func calculateCheckSumWithFlipping(_ input: String) -> Int {
         }
         checksums.append(checksum)
     }
-        
+    
+    print("Cached count: \(boards.reduce(0) { $0 + $1.cacheHitCount })")
     return checksums.reduce(0, +)
 }
