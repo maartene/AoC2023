@@ -134,38 +134,36 @@ class MountainRange {
 
 func createMountainRangesFromInput(_ input: String) -> [MountainRange] {
     var lines = input.split(separator: "\n", omittingEmptySubsequences: false).map { String($0) }
-    var boardStrings = [String]()
+    var mountainRangeStrings = [String]()
     while lines.count > 0 {
         //print(lines)
-        if let endOfBoardIndex = lines.firstIndex(of: "") {
+        if let endOfMountainRangeIndex = lines.firstIndex(of: "") {
             
-            boardStrings.append(lines[0 ..< endOfBoardIndex].joined(separator: "\n"))
-            lines = Array(lines.dropFirst(endOfBoardIndex))
+            mountainRangeStrings.append(lines[0 ..< endOfMountainRangeIndex].joined(separator: "\n"))
+            lines = Array(lines.dropFirst(endOfMountainRangeIndex))
             lines = Array(lines.dropFirst())
         } else {
-            boardStrings.append(lines.joined(separator: "\n"))
+            mountainRangeStrings.append(lines.joined(separator: "\n"))
             lines = []
         }
         
     }
     
-    //print(boardStrings.count, boardStrings)
-    
-    return boardStrings.map { MountainRange($0) }
+    return mountainRangeStrings.map { MountainRange($0) }
 }
 
 func calculateCheckSum(_ input: String) -> Int {
-    let boards = createMountainRangesFromInput(input)
+    let mountainRanges = createMountainRangesFromInput(input)
     
-    let verticalMirrors = boards.compactMap {
+    let verticalMirrors = mountainRanges.compactMap {
         return $0.findVerticalReflection()
     }.map { ($0 + 1) * 1 }
     
-    let horizontalMirrors = boards.compactMap {
+    let horizontalMirrors = mountainRanges.compactMap {
         return $0.findHorizontalReflection()
     }.map { ($0 + 1) * 100 }
     
-    print("Cached count: \(boards.reduce(0) { $0 + $1.cacheHitCount })")
+    print("Cached count: \(mountainRanges.reduce(0) { $0 + $1.cacheHitCount })")
     return verticalMirrors.reduce(0, +) + horizontalMirrors.reduce(0, +)
 }
 
@@ -197,12 +195,11 @@ extension MountainRange {
 }
 
 func calculateCheckSumWithFlipping(_ input: String) -> Int {
-    let boards = createMountainRangesFromInput(input)
+    let mountainRanges = createMountainRangesFromInput(input)
     
     var checksums = [Int]()
-    for i in 0 ..< boards.count {
-        //print("\(Double(i)/Double(boards.count) * 100)%")
-        let reflection = boards[i].findReflectionWithFlipping()
+    for i in 0 ..< mountainRanges.count {
+        let reflection = mountainRanges[i].findReflectionWithFlipping()
         var checksum = 0
         if let col = reflection.col {
             checksum += (col + 1)
@@ -213,6 +210,6 @@ func calculateCheckSumWithFlipping(_ input: String) -> Int {
         checksums.append(checksum)
     }
     
-    print("Cached count: \(boards.reduce(0) { $0 + $1.cacheHitCount })")
+    print("Cached count: \(mountainRanges.reduce(0) { $0 + $1.cacheHitCount })")
     return checksums.reduce(0, +)
 }
