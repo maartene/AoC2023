@@ -61,3 +61,55 @@ func calculateTotalNorthLoad(_ matrix: [[Character]]) -> Int {
 
     return load
 }
+
+// MARK: Part 2
+
+func rotateMatrixCW(_ matrix: [[Character]]) -> [[Character]] {
+    var a = matrix
+    let height = matrix.count
+    let width = matrix.first?.count ?? 0
+    let N = height
+    
+    // Traverse each cycle
+    for i in 0 ..< N / 2 {
+        for j in i ..< N - i - 1 {
+            // Swap elements of each cycle
+            // in clockwise direction
+            let temp = a[i][j]
+            a[i][j] = a[N - 1 - j][i]
+            a[N - 1 - j][i] = a[N - 1 - i][N - 1 - j]
+            a[N - 1 - i][N - 1 - j] = a[j][N - 1 - i]
+            a[j][N - 1 - i] = temp
+        }
+    }
+    
+    return a
+}
+
+func cycleMatrix(_ matrix: [[Character]]) -> [[Character]] {
+    var updatedMatrix = matrix
+    for _ in 0 ..< 4 {
+        updatedMatrix = tiltNorth(updatedMatrix)
+        updatedMatrix = rotateMatrixCW(updatedMatrix)
+    }
+    
+    return updatedMatrix
+}
+
+func cycleMany(_ inputMatrix: [[Character]], count: Int) -> [[Character]] {
+    var matrices = [[[Character]]]()
+    var matrix = inputMatrix
+    
+    while matrices.contains(matrix) == false {
+        matrices.append(matrix)
+        matrix = cycleMatrix(matrix)
+    }
+    
+    print("Recurrance after \(matrices.count) cyles")
+    
+    let jumpBack = matrices.firstIndex(of: matrix)!
+    
+    matrices = Array(matrices.dropFirst(jumpBack))
+    
+    return matrices[(count - jumpBack) % matrices.count]
+}
