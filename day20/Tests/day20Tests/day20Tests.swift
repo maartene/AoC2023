@@ -6,10 +6,31 @@ class PulseSystem {
     
     init(_ inputString: String) {
         let lines = inputString.split(separator: "\n").map { String($0) }
-        let modules = lines.reduce(into: [String:Module]()) { result, line in
+        
+        let nonConjunctions = lines.filter { $0.first != "&" }
+        var modules = nonConjunctions.reduce(into: [String:Module]()) { result, line in
             let module = makeModule(line)
             result[module.name] = module
         }
+        
+        let conjunctions = lines.filter { $0.first == "&" }
+            .map { makeModule($0) }
+        
+        for conjunction in conjunctions {
+            modules[conjunction.name] = conjunction
+        }
+        
+        // pre-populate incoming connections
+        for module in conjunctions {
+            if let conjunction = module as? Conjunction {
+                let incomingModules = modules.filter { $0.value.targetModuleNames.contains(conjunction.name) }
+                    .map { $0.key }
+                for incomingModuleName in incomingModules {
+                    conjunction.lastReceivedPulses.append(Pulse(origin: incomingModuleName, value: .low, targetModuleName: conjunction.name))
+                }
+            }
+        }
+        
         //modules.append(Output())
         self.modules = modules
     }
@@ -17,7 +38,7 @@ class PulseSystem {
     
     
     func pushButton() {
-        var pulses = [Pulse(value: .low, targetModuleName: "broadcaster")]
+        var pulses = [Pulse(origin: "button", value: .low, targetModuleName: "broadcaster")]
         
         while pulses.isEmpty == false {
             // get the oldest Pulse and remove it from the 'queue'
@@ -50,20 +71,14 @@ struct Pulse: Equatable {
         case high
     }
     
+    let origin: String
     let value: PulseValue
     let targetModuleName: String
     
-    init(value: PulseValue, targetModuleName: String) {
+    init(origin: String, value: PulseValue, targetModuleName: String) {
+        self.origin = origin
         self.value = value
         self.targetModuleName = targetModuleName
-    }
-    
-    static func low(_ targetModuleName: String) -> Pulse {
-        Pulse(value: .low, targetModuleName: targetModuleName)
-    }
-    
-    static func high(_ targetModuleName: String) -> Pulse {
-        Pulse(value: .high, targetModuleName: targetModuleName)
     }
 }
 
@@ -85,7 +100,7 @@ class Broadcaster: Module {
     
     func receive(_ pulse: Pulse) -> [Pulse] {
         targetModuleNames.map {
-            Pulse(value: pulse.value, targetModuleName: $0)
+            Pulse(origin: name, value: pulse.value, targetModuleName: $0)
         }
     }
     
@@ -112,12 +127,12 @@ class Flipflop: Module {
         state.toggle()
         
         return targetModuleNames.map {
-            Pulse(value: state ? .high : .low, targetModuleName: $0)
+            Pulse(origin: name, value: state ? .high : .low, targetModuleName: $0)
         }
     }
     
     var description: String {
-        name + " " + targetModuleNames.joined(separator: " ") + "\(state)"
+        name + " " + targetModuleNames.joined(separator: " ") + " \(state)"
     }
 }
 
@@ -127,9 +142,13 @@ class Conjunction: Module {
     
     var lastReceivedPulses = [Pulse]()
     
-    init(name: String, targetModuleNames: [String]) {
+    init(name: String, targetModuleNames: [String], incomingModuleNames: [String] = []) {
         self.name = name
         self.targetModuleNames = targetModuleNames
+        
+        for incomingModuleName in incomingModuleNames {
+            lastReceivedPulses.append(Pulse(origin: incomingModuleName, value: .low, targetModuleName: name))
+        }
     }
     
     func lastReceivedPulseValueFor(_ moduleName: String) -> Pulse.PulseValue {
@@ -138,10 +157,8 @@ class Conjunction: Module {
     
     func receive(_ pulse: Pulse) -> [Pulse] {
         // update lastReceivedPulses
-        if let existingIndex = lastReceivedPulses.firstIndex(where: { $0.targetModuleName == pulse.targetModuleName }) {
+        if let existingIndex = lastReceivedPulses.firstIndex(where: { $0.origin == pulse.origin }) {
             lastReceivedPulses[existingIndex] = pulse
-        } else {
-            lastReceivedPulses.append(pulse)
         }
         
         let allHigh = lastReceivedPulses.reduce(true) { result, pulse in
@@ -150,30 +167,17 @@ class Conjunction: Module {
         
         if allHigh {
             return targetModuleNames.map {
-                Pulse(value: .low, targetModuleName: $0)
+                Pulse(origin: name, value: .low, targetModuleName: $0)
             }
         } else {
             return targetModuleNames.map {
-                Pulse(value: .high, targetModuleName: $0)
+                Pulse(origin: name, value: .high, targetModuleName: $0)
             }
         }
     }
     
     var description: String {
         name + " " + lastReceivedPulses.description
-    }
-}
-
-class Output: Module {
-    let name = "output"
-    let targetModuleNames: [String] = []
-    
-    func receive(_ pulse: Pulse) -> [Pulse] {
-        return []
-    }
-    
-    var description: String {
-        name
     }
 }
 
@@ -201,11 +205,23 @@ func makeModule(_ inputString: String) -> Module {
         return Flipflop(name: moduleName, targetModuleNames: targetModuleNames)
     case "&":
         return Conjunction(name: moduleName, targetModuleNames: targetModuleNames)
-    case "o":
-        return Output()
     default:
-        fatalError("Unexected token \(splits[0])")
+        return Empty()
     }
+}
+
+class Empty: Module {
+    let name = "Empty"
+    
+    let targetModuleNames = [String]()
+    
+    func receive(_ pulse: Pulse) -> [Pulse] {
+        []
+    }
+    
+    let description = "Empty"
+    
+    
 }
 
 final class day20Tests: XCTestCase {
@@ -224,13 +240,13 @@ final class day20Tests: XCTestCase {
         ]
         
         let broadcaster = Broadcaster(name: "broadcaster", targetModuleNames: modules)
-        let pulse = Pulse.low("broadcaster")
+        let pulse = Pulse(origin: "button", value: .low, targetModuleName: "broadcaster")
         let result = broadcaster.receive(pulse)
         
         let expected = [
-            Pulse.low("a"),
-            Pulse.low("b"),
-            Pulse.low("c"),
+            Pulse(origin: "broadcaster", value: .low, targetModuleName: "a"),
+            Pulse(origin: "broadcaster", value: .low, targetModuleName: "b"),
+            Pulse(origin: "broadcaster", value: .low, targetModuleName: "c"),
         ]
         
         XCTAssertEqual(result, expected)
@@ -261,64 +277,64 @@ final class day20Tests: XCTestCase {
     
     func test_flipflop_ignoresHighPulse() {
         let flipflop = Flipflop(name: "ff", targetModuleNames: [])
-        let result = flipflop.receive(Pulse.high("ff"))
+        let result = flipflop.receive(Pulse(origin: "", value: .high, targetModuleName: "ff"))
         XCTAssertEqual(result, [])
         XCTAssertEqual(flipflop.state, false)
     }
     
     func test_flipflop_becomesOn_whenOff_andReceivesLowPulse() {
         let flipflop = Flipflop(name: "ff", targetModuleNames: [])
-        _ = flipflop.receive(Pulse.low("ff"))
+        _ = flipflop.receive(Pulse(origin: "", value: .low, targetModuleName: "ff"))
         XCTAssertEqual(flipflop.state, true)
     }
     
     func test_flipflop_sendsLowPulse_whenOff_andReceivesLowPulse() {
         let flipflop = Flipflop(name: "ff", targetModuleNames: ["foo"])
-        let result = flipflop.receive(Pulse.low("ff"))
-        XCTAssertEqual(result, [Pulse(value: .high, targetModuleName: "foo")])
+        let result = flipflop.receive(Pulse(origin: "", value: .low, targetModuleName: "ff"))
+        XCTAssertEqual(result, [Pulse(origin: "ff", value: .high, targetModuleName: "foo")])
     }
     
     func test_flipflop_becomesOff_whenOn_andReceivesLowPulse() {
         let flipflop = Flipflop(name: "ff", targetModuleNames: [])
         flipflop.state = true
-        _ = flipflop.receive(Pulse.low("ff"))
+        _ = flipflop.receive(Pulse(origin: "", value: .low, targetModuleName: "ff"))
         XCTAssertEqual(flipflop.state, false)
     }
     
     func test_flipflop_sendsHighPulse_whenOn_andReceivesLowPulse() {
         let flipflop = Flipflop(name: "ff", targetModuleNames: ["foo"])
         flipflop.state = true
-        let result = flipflop.receive(Pulse.low("ff"))
-        XCTAssertEqual(result, [Pulse(value: .low, targetModuleName: "foo")])
+        let result = flipflop.receive(Pulse(origin: "", value: .low, targetModuleName: "ff"))
+        XCTAssertEqual(result, [Pulse(origin: "ff", value: .low, targetModuleName: "foo")])
     }
     
     // Conjunction
     func test_conjunction_defaultsToLowPulse_forLastReceivedPulse() {
-        let conjunction = Conjunction(name: "c", targetModuleNames: [])
+        let conjunction = Conjunction(name: "c", targetModuleNames: [], incomingModuleNames: ["b"])
         XCTAssertEqual(conjunction.lastReceivedPulseValueFor("b"), .low)
     }
     
     //Conjunction modules (prefix &) remember the type of the most recent pulse received from each of their connected input modules; they initially default to remembering a low pulse for each input. When a pulse is received, the conjunction module first updates its memory for that input. Then, if it remembers high pulses for all inputs, it sends a low pulse; otherwise, it sends a high pulse.
     
     func test_conjunction_invertsIncomingSignal() {
-        let conjunction = Conjunction(name: "c", targetModuleNames: ["bar", "baz"])
-        var result = conjunction.receive(Pulse(value: .low, targetModuleName: "foo"))
+        let conjunction = Conjunction(name: "c", targetModuleNames: ["bar", "baz"], incomingModuleNames: ["o"])
+        var result = conjunction.receive(Pulse(origin: "o", value: .low, targetModuleName: "foo"))
         XCTAssertEqual(result[0].value, .high)
-        result = conjunction.receive(Pulse(value: .high, targetModuleName: "foo"))
+        result = conjunction.receive(Pulse(origin: "o",value: .high, targetModuleName: "foo"))
         XCTAssertEqual(result[0].value, .low)
     }
     
     func test_conjunction_returnsLow_ifAllHighPulses() {
-        let conjunction = Conjunction(name: "c", targetModuleNames: ["bar", "baz"])
-        conjunction.lastReceivedPulses = [Pulse(value: .high, targetModuleName: "a"), Pulse(value: .high, targetModuleName: "b"), Pulse(value: .low, targetModuleName: "d")]
-        let result = conjunction.receive(Pulse(value: .high, targetModuleName: "d"))
+        let conjunction = Conjunction(name: "c", targetModuleNames: ["bar", "baz"], incomingModuleNames: ["a", "b", "d"])
+        conjunction.lastReceivedPulses = [Pulse(origin: "a",value: .high, targetModuleName: "c"), Pulse(origin: "b",value: .high, targetModuleName: "c"), Pulse(origin: "d",value: .low, targetModuleName: "c")]
+        let result = conjunction.receive(Pulse(origin: "d",value: .high, targetModuleName: "c"))
         XCTAssertEqual(result[0].value, .low)
     }
     
     func test_conjunction_returnsHigh_ForMixedSignals() {
-        let conjunction = Conjunction(name: "c", targetModuleNames: ["bar", "baz"])
-        conjunction.lastReceivedPulses = [Pulse(value: .high, targetModuleName: "a"), Pulse(value: .low, targetModuleName: "b")]
-        let result = conjunction.receive(Pulse(value: .high, targetModuleName: "d"))
+        let conjunction = Conjunction(name: "c", targetModuleNames: ["bar", "baz"], incomingModuleNames: ["a", "b", "d"])
+        conjunction.lastReceivedPulses = [Pulse(origin: "a", value: .high, targetModuleName: "c"), Pulse(origin: "b", value: .low, targetModuleName: "c")]
+        let result = conjunction.receive(Pulse(origin: "d", value: .high, targetModuleName: "c"))
         XCTAssertEqual(result[0].value, .high)
     }
     
@@ -326,7 +342,7 @@ final class day20Tests: XCTestCase {
         let pulseSystem = PulseSystem(exampleInput)
         pulseSystem.pushButton()
         
-        let flipflops = pulseSystem.modules.compactMap { $0 as? Flipflop }
+        let flipflops = pulseSystem.modules.values.compactMap { $0 as? Flipflop }
         for flipflop in flipflops {
             XCTAssertEqual(flipflop.state, false)
         }
@@ -341,29 +357,6 @@ final class day20Tests: XCTestCase {
     &con -> output
     output -> foo
     """
-        
-//    func test_pushButton_exampleInput2_output() {
-//        let expected: [Pulse.PulseValue] = [.low, .high, .high, .high, .low]
-//        let pulseSystem = PulseSystem(exampleInput2)
-//        //pulseSystem.modules.append(Output())
-//        
-//        let output = pulseSystem.modules["output"]! as! Output
-//        
-//        for expect in expected {
-//            pulseSystem.pushButton()
-//            XCTAssertEqual(output.state, expect)
-//        }
-//    }
-    
-    func test_pushButton_exampleInput2_state() {
-        let pulseSystem = PulseSystem(exampleInput2)
-        let expected = pulseSystem.modules.description
-
-        for _ in 0 ..< 4 {
-            pulseSystem.pushButton()
-        }
-        XCTAssertEqual(pulseSystem.modules.description, expected)
-    }
     
     func test_pulseSystem_pulseValueAfter1000presses_withExampleInput() {
         let pulseSystem = PulseSystem(exampleInput)
@@ -391,10 +384,11 @@ final class day20Tests: XCTestCase {
         let pulseSystem = PulseSystem(input)
         
         for i in 0 ..< 1000 {
-            print("Push \(i)")
             pulseSystem.pushButton()
-        }
+        } 
         
-        print(pulseSystem.lowPulses, pulseSystem.highPulses, pulseSystem.lowPulses * pulseSystem.highPulses)
+        XCTAssertEqual(pulseSystem.lowPulses, 17150)
+        XCTAssertEqual(pulseSystem.highPulses, 45997)
+        XCTAssertEqual(pulseSystem.lowPulses * pulseSystem.highPulses, 788848550 )
     }
 }
