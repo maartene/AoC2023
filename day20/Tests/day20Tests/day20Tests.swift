@@ -3,9 +3,13 @@ import XCTest
 
 class PulseSystem {
     let modules: [String: Module]
+    var spy: String?
+    var spyFound = false
     
-    init(_ inputString: String) {
+    init(_ inputString: String, spy: String? = nil) {
         let lines = inputString.split(separator: "\n").map { String($0) }
+        
+        self.spy = spy
         
         let nonConjunctions = lines.filter { $0.first != "&" }
         var modules = nonConjunctions.reduce(into: [String:Module]()) { result, line in
@@ -36,11 +40,10 @@ class PulseSystem {
     }
     
     
-    
     func pushButton() {
         var pulses = [Pulse(origin: "button", value: .low, targetModuleName: "broadcaster")]
         
-        while pulses.isEmpty == false {
+        while pulses.isEmpty == false && spyFound == false {
             // get the oldest Pulse and remove it from the 'queue'
             let pulse = pulses[0]
             pulses = Array(pulses.dropFirst())
@@ -51,6 +54,14 @@ class PulseSystem {
                 lowPulses += 1
             } else {
                 highPulses += 1
+            }
+            
+//            if pulse.targetModuleName == "rx" && pulse.value == .low {
+//                rx = true
+//            }
+            
+            if let spy, pulse.targetModuleName == spy && pulse.value == .low {
+                spyFound = true
             }
             
             if let module = modules[pulse.targetModuleName] {
@@ -224,6 +235,43 @@ class Empty: Module {
     
 }
 
+// MARK: Part 2
+func countUntilRXLow(_ inputString: String) -> Int {
+    func countUntilSpy(_ spy: String, inputString: String) -> Int {
+        let pulseSystem = PulseSystem(inputString, spy: spy)
+        var count = 0
+        while pulseSystem.spyFound == false {
+            count += 1
+            pulseSystem.pushButton()
+        }
+        return count
+    }
+    
+    let keys = ["bt", "fv", "rd", "pr"]
+    let counts = keys.map { countUntilSpy($0, inputString: inputString)}
+    
+    func gcd(_ num1: Int, _ num2: Int) -> Int {
+        var a = num1
+        var b = num2
+        while b != 0 {
+            let t = b
+            b = a % b
+            a = t
+        }
+        return a
+    }
+        
+    func lcm(of numbers: [Int]) -> Int {
+        var result = numbers.first ?? 1
+        for number in numbers {
+            result = (result * number) / gcd(result, number)
+        }
+        return result
+    }
+    
+    return lcm(of: counts)
+}
+
 final class day20Tests: XCTestCase {
     let exampleInput =
     """
@@ -383,12 +431,18 @@ final class day20Tests: XCTestCase {
     func test_part1() {
         let pulseSystem = PulseSystem(input)
         
-        for i in 0 ..< 1000 {
+        for _ in 0 ..< 1000 {
             pulseSystem.pushButton()
         } 
         
         XCTAssertEqual(pulseSystem.lowPulses, 17150)
         XCTAssertEqual(pulseSystem.highPulses, 45997)
         XCTAssertEqual(pulseSystem.lowPulses * pulseSystem.highPulses, 788848550 )
+    }
+    
+    func test_part2() {
+        let result = countUntilRXLow(input)
+        XCTAssertEqual(result, 228_300_182_686_739)
+        
     }
 }
