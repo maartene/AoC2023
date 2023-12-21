@@ -6,10 +6,8 @@ struct Map {
     let startPosition: Vector2D
     let width: Int
     let height: Int
-    let targetStepCount: Int
     
-    init(_ inputString: String, targetStepCount: Int) {
-        self.targetStepCount = targetStepCount
+    init(_ inputString: String) {
         let lines = inputString.split(separator: "\n").map { String($0) }
         
         height = lines.count
@@ -41,14 +39,14 @@ struct Map {
         self.startPosition = startPosition
     }
     
-    func getTileCountWithinSteps() -> Int {
-        let dijkstra = bfs(target: startPosition)
+    func getTileCountWithinSteps(_ targetStepCount: Int) -> Int {
+        let dijkstra = bfs(target: startPosition, with: targetStepCount)
         //printDijkstra(tiles: dijkstra, colCount: width, rowCount: height)
         return dijkstra.filter { $0.value == targetStepCount || ($0.value < targetStepCount && $0.value % 2 == targetStepCount % 2) }
             .count
     }
     
-    func getNeighboursFor(_ currentNode: Vector2D) -> [Vector2D] {
+    func getNeighboursFor(_ currentNode: Vector2D, with targetStepCount: Int) -> [Vector2D] {
         currentNode.neighbours.filter {
             let multiplier = max(targetStepCount / width, targetStepCount / height) + 1
             let coord = Vector2D(x: (multiplier * width + $0.x) % width, y: (multiplier * height + $0.y) % height)
@@ -62,7 +60,7 @@ struct Map {
         }
     }
     
-    func bfs(target: Vector2D) -> [Vector2D: Int] {
+    func bfs(target: Vector2D, with targetStepCount: Int) -> [Vector2D: Int] {
             var unvisited = [target]
             var unvisitedSet = Set([target])
             var visited = Set<Vector2D>()
@@ -72,7 +70,7 @@ struct Map {
             dist[target] = 0
             var currentNode = target
             while unvisited.isEmpty == false {
-                let neighbours = getNeighboursFor(currentNode)
+                let neighbours = getNeighboursFor(currentNode, with: targetStepCount)
                 for neighbour in neighbours {
                     if visited.contains(neighbour) == false && unvisitedSet.contains(neighbour) == false {
                         unvisited.append(neighbour)
@@ -97,6 +95,42 @@ struct Map {
         }
 }
 
+func crazyCalc(_ inputString: String, targetStepCount: Int) -> Int {
+    let map = Map(inputString)
+    let reachableTilesPerFullSquare = map.getTileCountWithinSteps(map.height)
+    let fullTilesCount = targetStepCount / map.height
+    let numberOfFullSquares = Int(1.5 * Double(fullTilesCount * fullTilesCount) - 0.5 * Double(fullTilesCount))
+    let numberOfReachableTilesInFullSquares = numberOfFullSquares * reachableTilesPerFullSquare
+    
+    let lastSteps = targetStepCount % map.height
+    let reachableTilesCountPerPartialSquare = map.getTileCountWithinSteps(lastSteps) - 1
+    let partialSquareCount = (fullTilesCount * 4) + 1
+    let reachableTilesInPartialSquares = partialSquareCount * reachableTilesCountPerPartialSquare
+    
+    return numberOfReachableTilesInFullSquares + reachableTilesInPartialSquares
+//
+//    //−0.7089𝑥2+417.7𝑥+1.000
+//    var map = Map(input)
+//    let tilesPerSquare = map.getTileCountWithinSteps()
+//    
+//    let bigsteps = (26501365 / 131)
+//    
+//    
+//    let numberOfFullTiles = 2 * bigsteps * bigsteps + 2 *  bigsteps
+//    
+//    print("big steps tiles: ", bigsteps, numberOfFullTiles)
+//    let numberOfFullTilesTiles = tilesPerSquare * numberOfFullTiles
+//    print("Total number of reachable tiles in full squares: ", numberOfFullTilesTiles)
+//    
+//    let lastSteps = 26501365 % 131
+//    map = Map(input, targetStepCount: lastSteps)
+//    let lastTiles = map.getTileCountWithinSteps()
+//    let lastTilesInOuterRing = 4 * (bigsteps + 1) * lastTiles
+//    print("last part tiles: ", lastTilesInOuterRing)
+//    
+//    print("total: ", lastTilesInOuterRing + numberOfFullTilesTiles )
+}
+
 final class day21Tests: XCTestCase {
     let exampleInput =
     """
@@ -114,54 +148,112 @@ final class day21Tests: XCTestCase {
     """
     
     func test_map_getTileCountWithingSteps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 6)
-        let result = map.getTileCountWithinSteps()
+        let map = Map(exampleInput)
+        let result = map.getTileCountWithinSteps(6)
         XCTAssertEqual(result, 16)
     }
     
     func test_part1() {
-        let map = Map(input, targetStepCount: 64)
-        let result = map.getTileCountWithinSteps()
+        let map = Map(input)
+        let result = map.getTileCountWithinSteps(64)
         XCTAssertEqual(result, 3709)
     }
     
     // part 2
     func test_map_getTileCountWithingSteps_10steps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 10)
-        let result = map.getTileCountWithinSteps()
+        let map = Map(exampleInput)
+        let result = map.getTileCountWithinSteps(10)
         XCTAssertEqual(result, 50)
     }
     
     func test_map_getTileCountWithingSteps_50steps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 50)
-        let result = map.getTileCountWithinSteps()
+        let map = Map(exampleInput)
+        let result = map.getTileCountWithinSteps(50)
         XCTAssertEqual(result, 1594)
     }
     
     func test_map_getTileCountWithingSteps_100steps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 100)
-        let result = map.getTileCountWithinSteps()
+        let map = Map(exampleInput)
+        let result = map.getTileCountWithinSteps(100)
         XCTAssertEqual(result, 6536)
     }
     
     func test_map_getTileCountWithingSteps_3steps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 3)
-        let result = map.getTileCountWithinSteps()
+        let map = Map(exampleInput)
+        let result = map.getTileCountWithinSteps(3)
         XCTAssertEqual(result, 6)
     }
     
-    func test_map_getTileCountWithingSteps_500steps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 500)
-        let result = map.getTileCountWithinSteps()
-        XCTAssertEqual(result, 167004)
+    let patternInput =
+    """
+    ...........
+    ......##.#.
+    .###..#..#.
+    ..#.#...#..
+    ....#.#....
+    .....S.....
+    .##......#.
+    .......##..
+    .##.#.####.
+    .##...#.##.
+    ...........
+    """
+    
+    func test_patternInput() {
+        let map = Map(patternInput)
+        for i in 0 ..< 50 {
+            let count = map.getTileCountWithinSteps(1 + i * 2)
+            print("\(1 + i * 2): \(count)")
+        }
     }
     
-    func test_map_getTileCountWithingSteps_1000steps_forExampleInput() {
-        let map = Map(exampleInput, targetStepCount: 1000)
-        let result = map.getTileCountWithinSteps()
-        XCTAssertEqual(result, 668697)
+    func test_input() {
+        let map = Map(input)
+        
+        let modulo = 26501365 % map.height
+        
+        for i in 3 ... 7 {
+            let count = map.getTileCountWithinSteps(modulo * i)
+            print("\(modulo * i): \(count)")
+        }
     }
     
+//    func test_crazyCalc_1() {
+//        let result = crazyCalc(input, targetStepCount: 1)
+//        XCTAssertEqual(result, 4)
+//    }
+//    
+//    func test_crazyCalc_131() {
+//        let result = crazyCalc(input, targetStepCount: 131)
+//        XCTAssertEqual(result, 15301)
+//    }
+//    
+//    func test_crazyCalc_163() {
+//        let result = crazyCalc(input, targetStepCount: 163)
+//        XCTAssertEqual(result, 23157) // 23157
+//    }
+//    
+//    func test_crazyCalc_262() {
+//        let result = crazyCalc(input, targetStepCount: 262)
+//        XCTAssertEqual(result, 60771)
+//    }
+    
+//    func test_map_getTileCountWithingSteps_500steps_forExampleInput() {
+//        let map = Map(exampleInput, targetStepCount: 500)
+//        let result = map.getTileCountWithinSteps()
+//        XCTAssertEqual(result, 167004)
+//    }
+//    
+//    func test_map_getTileCountWithingSteps_1000steps_forExampleInput() {
+//        let map = Map(exampleInput, targetStepCount: 1000)
+//        let result = map.getTileCountWithinSteps()
+//        XCTAssertEqual(result, 668697)
+//    }
+    
+    
+        
+        // 634419234701821,00
+        // 1252405005729977 too big
 //    func test_map_getTileCountWithingSteps_5000steps_forExampleInput() {
 //        let map = Map(exampleInput, targetStepCount: 5000)
 //        let result = map.getTileCountWithinSteps()
