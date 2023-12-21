@@ -30,28 +30,16 @@ final class day21Tests: XCTestCase {
     }
     
     // part 2
-    func test_map_getTileCountWithingSteps_10steps_forExampleInput() {
-        let map = Map(exampleInput)
-        let result = map.getTileCountWithinSteps(10)
-        XCTAssertEqual(result, 50)
+    func test_map_getTileCountWithinSteps_2widthPlus1() {
+        let map = Map(input)
+        let result = map.getTileCountWithinSteps(map.width * 2 + 1)
+        XCTAssertEqual(result, 7539)
     }
     
-    func test_map_getTileCountWithingSteps_50steps_forExampleInput() {
-        let map = Map(exampleInput)
-        let result = map.getTileCountWithinSteps(50)
-        XCTAssertEqual(result, 1594)
-    }
-    
-    func test_map_getTileCountWithingSteps_100steps_forExampleInput() {
-        let map = Map(exampleInput)
-        let result = map.getTileCountWithinSteps(100)
-        XCTAssertEqual(result, 6536)
-    }
-    
-    func test_map_getTileCountWithingSteps_3steps_forExampleInput() {
-        let map = Map(exampleInput)
-        let result = map.getTileCountWithinSteps(3)
-        XCTAssertEqual(result, 6)
+    func test_map_getTileCountWithinSteps_2width() {
+        let map = Map(input)
+        let result = map.getTileCountWithinSteps(map.width * 2)
+        XCTAssertEqual(result, 7546)
     }
         
     func test_map_bigCount() {

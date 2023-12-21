@@ -25,14 +25,6 @@ struct Map {
                 }
             }
         }
-//
-//        // multiply map
-//        let multiplier = max(width / targetStepCount, height / targetStepCount) / 2
-//        for i in -multiplier ... multiplier {
-//            for tile in tiles {
-//                tiles[Vector2D(x: tile.key.x + width * i, y: tile.key.y + height * i)]
-//            }
-//        }
         
         self.tiles = tiles
         self.startPosition = startPosition
@@ -48,15 +40,7 @@ struct Map {
     
     func getNeighboursFor(_ currentNode: Vector2D, with targetStepCount: Int) -> [Vector2D] {
         currentNode.neighbours.filter {
-            let multiplier = max(targetStepCount / width, targetStepCount / height) + 1
-            let coord = Vector2D(x: (multiplier * width + $0.x) % width, y: (multiplier * height + $0.y) % height)
-            
-            let manhattanDistance = abs((startPosition.x - $0.x) + (startPosition.y - $0.y))
-            guard manhattanDistance <= targetStepCount else {
-                return false
-            }
-            
-            return tiles[coord] == "."
+            return tiles[$0] == "."
         }
     }
     
@@ -91,44 +75,6 @@ struct Map {
     }
     
     func getTileCountWithinStepsBig(_ targetStepCount: Int) -> Int {
-        func getKey(_ x: Int, _ y: Int, _ z: Int) -> Int {
-            (z * 1000 + x) * 1000 + y
-        }
-        
-        func findPlots(_ x: Int, _ y: Int, _ maxSteps: Int) -> Int {
-            var visited = Set<Int>()
-            return findPlots(x, y, maxSteps, &visited)
-        }
-        
-        func findPlots(_ x: Int, _ y: Int, _ maxSteps: Int, _ visited: inout Set<Int>, _ distance: Int = 0) -> Int {
-            let key = getKey(x, y, distance)
-
-            if (visited.contains(key)) { return 0 }
-            visited.insert(key)
-
-            if (distance == maxSteps) { return 1 }
-
-            var plots = 0
-
-            let neighbors = [
-                (x - 1, y),
-                (x + 1, y),
-                (x, y - 1),
-                (x, y + 1)
-            ]
-
-            neighbors.forEach {
-                let nx = $0.0
-                let ny = $0.1
-                if (nx < 0 || ny < 0 || nx >= width || ny >= height) { return }
-
-                if tiles[Vector2D(x: nx, y: ny)] == "." {
-                    plots += findPlots(nx, ny, maxSteps, &visited, distance + 1)
-                }
-            }
-
-          return plots;
-        }
         
         /**
          * Alignment of the repeating gardens:
@@ -157,6 +103,7 @@ struct Map {
          *                 S | S
          *                 South
          */
+        /// Source: https://github.com/keriati/aoc/blob/master/2023/day21.ts
         
         let gardenGridDiameter = targetStepCount / width - 1
         
@@ -164,35 +111,30 @@ struct Map {
         let evenGardens = (((gardenGridDiameter + 1) / 2) * 2) * (((gardenGridDiameter + 1) / 2) * 2)
         
         print("Setting up odd/even plots")
-        //let oddGardenPlots = getTileCountWithinSteps(width * 2 + 1)
-        //let evenGardenPlots = getTileCountWithinSteps(width * 2)
-        let oddGardenPlots = findPlots(startPosition.x, startPosition.y, width * 2 + 1)
-        let evenGardenPlots = findPlots(startPosition.x, startPosition.y, width * 2)
-          
+        let oddGardenPlots = getTileCountWithinSteps(width * 2 + 1)
+        let evenGardenPlots = getTileCountWithinSteps(width * 2)
         
         print("Setting up cross plots")
-        let northPlots = findPlots(startPosition.x, width - 1, width - 1);
-        let eastPlots = findPlots(0, startPosition.y, width - 1);
-        let southPlots = findPlots(startPosition.x, 0, width - 1);
-        let westPlots = findPlots(width - 1, startPosition.y, width - 1);
-          
+        let northPlots = getTileCountWithinSteps(width - 1, customStartPosition: Vector2D(x: startPosition.x, y: width - 1))
+        let eastPlots = getTileCountWithinSteps(width - 1, customStartPosition: Vector2D(x: 0, y: startPosition.y))
+        let southPlots = getTileCountWithinSteps(width - 1, customStartPosition: Vector2D(x: startPosition.x, y: 0))
+        let westPlots = getTileCountWithinSteps(width - 1, customStartPosition: Vector2D(x: width - 1, y: startPosition.y))
+
         let smallSteps = (width / 2) - 1
         
         print("Setting up small diagonals")
-        let NEPlotsSM = findPlots(0, width - 1, smallSteps);
-        let NWPlotsSM = findPlots(width - 1, width - 1, smallSteps);
-        let SEPlotsSM = findPlots(0, 0, smallSteps);
-        let SWPlotsSM = findPlots(width - 1, 0, smallSteps);
-
+        let NEPlotsSM = getTileCountWithinSteps(smallSteps, customStartPosition: Vector2D(x: 0, y: width - 1))
+        let NWPlotsSM = getTileCountWithinSteps(smallSteps, customStartPosition: Vector2D(x: width - 1, y: width - 1))
+        let SEPlotsSM = getTileCountWithinSteps(smallSteps, customStartPosition: .zero)
+        let SWPlotsSM = getTileCountWithinSteps(smallSteps, customStartPosition: Vector2D(x: width - 1, y: 0))
         
         let largeSteps = ((width * 3) / 2) - 1
         
         print("Setting up large diagonals")
-        let NEPlotsLG = findPlots(0, width - 1, largeSteps);
-        let NWPlotsLG = findPlots(width - 1, width - 1, largeSteps);
-        let SEPlotsLG = findPlots(0, 0, largeSteps);
-        let SWPlotsLG = findPlots(width - 1, 0, largeSteps);
-
+        let NEPlotsLG = getTileCountWithinSteps(largeSteps, customStartPosition: Vector2D( x: 0, y: width - 1))
+        let NWPlotsLG = getTileCountWithinSteps(largeSteps, customStartPosition: Vector2D(x: width - 1, y: width - 1))
+        let SEPlotsLG = getTileCountWithinSteps(largeSteps, customStartPosition: .zero)
+        let SWPlotsLG = getTileCountWithinSteps(largeSteps, customStartPosition: Vector2D(x: width - 1, y: 0))
         
         let mainGardenPlots =
             oddGardens * oddGardenPlots + evenGardens * evenGardenPlots
