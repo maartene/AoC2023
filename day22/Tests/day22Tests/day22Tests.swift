@@ -113,35 +113,119 @@ final class day22Tests: XCTestCase {
         XCTAssertEqual(brickStack.yzDescription, expectedYZ)
     }
     
-//    func test_stack_falls() {
-//        let stack = BrickStack(exampleInput)
-//        
-//        stack.settle()
-//        
-//        let expectedXZ =
-//        """
-//         x
-//        012
-//        .G. 6
-//        .G. 5
-//        FFF 4
-//        D.E 3 z
-//        ??? 2
-//        .A. 1
-//        --- 0
-//        """
-//        
-//        let expectedYZ =
-//        """
-//         y
-//        012
-//        .G. 6
-//        .G. 5
-//        .F. 4
-//        ??? 3 z
-//        B.C 2
-//        AAA 1
-//        --- 0
-//        """
-//    }
+    func test_stack_falls() {
+        let stack = BrickStack(exampleInput)
+        
+        stack.settle()
+        
+        let expectedXZ =
+        """
+         x
+        012
+        .G. 6
+        .G. 5
+        FFF 4
+        D.E 3 z
+        ??? 2
+        .A. 1
+        --- 0
+        """
+        
+        let expectedYZ =
+        """
+         y
+        012
+        .G. 6
+        .G. 5
+        .F. 4
+        ??? 3 z
+        B.C 2
+        AAA 1
+        --- 0
+        """
+        
+        XCTAssertEqual(stack.xzDescription, expectedXZ)
+        XCTAssertEqual(stack.yzDescription, expectedYZ)
+    }
+    
+    func test_input_endBelowStart() {
+        let bricks = input.split(separator: "\n").map {
+            Brick(String($0))
+        }
+        
+        let strangeBricks = bricks.filter { $0.start.z > $0.end.z }
+        
+        XCTAssertEqual(strangeBricks, [])
+    }
+    
+    func test_bricksCanBeDisintegrated_withExampleInput() {
+        let stack = BrickStack(exampleInput)
+        stack.settle()
+        let previousBricks = stack.bricks
+        
+        let cases = [
+            0: false,
+            1: true,
+            2: true,
+            3: true,
+            4: true,
+            5: false,
+            6: true
+        ]
+        
+        for expect in cases {
+            XCTAssertEqual(stack.canBrickBeDisintegrated(expect.key), expect.value)
+        }
+        
+        XCTAssertEqual(stack.bricks, previousBricks)
+    }
+    
+    func test_countBricksThatCanBeDisintegrated_withExampleInput() {
+        let stack = BrickStack(exampleInput)
+        stack.settle()
+        
+        let result = stack.countBricksThatCanSafelyDisintegrated()
+        XCTAssertEqual(result, 5)
+    }
+    
+    func test_part1() {
+        let stack = BrickStack(input)
+        stack.settle()
+        let result = stack.countBricksThatCanSafelyDisintegrated()
+        XCTAssertEqual(result, 405)
+    }
+    
+    // part 2
+    func test_chainReaction_withExampleInput() {
+        let cases = [
+            0: 6,
+            5: 1
+        ]
+        
+        let stack = BrickStack(exampleInput)
+        stack.settle()
+        
+        for expected in cases {
+            let result = stack.countChainReaction(brickKey: expected.key)
+            XCTAssertEqual(result, expected.value, "for brick: \(expected.key)")
+        }
+    }
+    
+    func test_sumOfchainReactions_withExampleInput() {
+        let stack = BrickStack(exampleInput)
+        stack.settle()
+        
+        let result = stack.sumOfchainReactions()
+        XCTAssertEqual(result, 7)
+    }
+    
+    func test_part2() {
+        let stack = BrickStack(input)
+        stack.settle()
+        
+        let result = stack.sumOfchainReactions()
+        print(result)
+        XCTAssertEqual(result, 61297)
+    }
 }
+
