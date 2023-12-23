@@ -70,35 +70,37 @@ struct Map {
         }
     }
     
-    func maxDijkstra(target: Vector2D) -> [Vector2D: Int] {
-        var unvisited = Set<Vector2D>()
+    func longestPathUsingDFS() -> Int {
         var visited = Set<Vector2D>()
-        var dist = [Vector2D: Int]()
-        
-        
-        unvisited.insert(target)
-        dist[target] = 0
-        var currentNode = target
-        while unvisited.isEmpty == false {
-            let neighbours = getNeighboursFor(currentNode)
+        var longest = 0
+
+        func dfs(_ coord: Vector2D, length: Int) {
+            if visited.contains(coord) || tiles[coord, default: "#"] == "#" {
+                return
+            }
+
+            if coord == targetPosition {
+                if length > longest {
+                    print("Found new maximum: \(length)")
+                }
+                longest = max(longest, length)
+                return
+            }
+
+            visited.insert(coord)
+
+            // Visit neighbors
+            let neighbours = getNeighboursFor(coord)
             for neighbour in neighbours {
-                if visited.contains(neighbour) == false {
-                    unvisited.insert(neighbour)
-                }
-                let alt = dist[currentNode]! + 1
-                if alt > dist[neighbour, default: Int.min] {
-                    dist[neighbour] = alt
-                }
+                dfs(neighbour, length: length + 1)
             }
-            
-            unvisited.remove(currentNode)
-            visited.insert(currentNode)
-            
-            if let newNode = unvisited.max(by: { dist[$0, default: Int.min] < dist[$1, default: Int.min] }) {
-                currentNode = newNode
-            }
+
+            visited.remove(coord)
         }
-        return dist
+
+        dfs(startPosition, length: 0)
+        
+        return longest
     }
     
     func minDijkstra(target: Vector2D) -> [Vector2D: Int] {
@@ -131,70 +133,9 @@ struct Map {
         }
         return dist
     }
-    
-    func longestPath() -> Int {
-        let dijkstra = maxDijkstra(target: startPosition)
-        //printDijkstra(tiles: dijkstra, colCount: width, rowCount: height)
         
-        return dijkstra[targetPosition]!
-    }
-    
     // MARK: Part 2
-    static func createMapWithoutSlopes(_ inputString: String) -> Map {
-        var changedString = inputString.replacingOccurrences(of: ">", with: ".")
-        changedString = changedString.replacingOccurrences(of: "<", with: ".")
-        changedString = changedString.replacingOccurrences(of: "^", with: ".")
-        changedString = changedString.replacingOccurrences(of: "v", with: ".")
-        
-        return Map(changedString)
-    }
-
-    func longestPath_dfs() -> Int {
-        // convert tiles to grid
-        var grid: [[Character]] = Array(repeating: Array(repeating: " ", count: width), count: height)
-        for y in 0 ..< height {
-            for x in 0 ..< width {
-                let coord = Vector2D(x: x, y: y)
-                if let value = tiles[coord] {
-                    grid[y][x] = value
-                } else {
-                    grid[y][x] = "#"
-                }
-            }
-        }
-
-        let rows = height
-        let cols = width
-        var visited = Array(repeating: Array(repeating: false, count: cols), count: rows)
-        var longest = 0
-
-        func dfs(i: Int, j: Int, length: Int) {
-            if i < 0 || i >= rows || j < 0 || j >= cols || visited[i][j] || grid[i][j] == "#" {
-                return
-            }
-
-            if targetPosition.y == i && targetPosition.x == j {
-                longest = max(longest, length)
-                return
-            }
-
-            visited[i][j] = true
-
-            // Visit neighbors
-            dfs(i: i + 1, j: j, length: length + 1)
-            dfs(i: i - 1, j: j, length: length + 1)
-            dfs(i: i, j: j + 1, length: length + 1)
-            dfs(i: i, j: j - 1, length: length + 1)
-
-            visited[i][j] = false
-        }
-
-        //dfs(i: startPosition.y, j: startPosition.x, length: 0)
-        dfs(i: startPosition.y, j: startPosition.x, length: 0)
-        
-        return longest
-    }
-    
+    // TODO: This is work in progress - not yet done!
     func simplifyGraph() {
         var nodes = tiles.filter { $0.value == "." && getNeighboursFor($0.key).count > 2 }.map { $0.key }
         
@@ -286,35 +227,4 @@ func printDijkstra(tiles: [Vector2D: Int], colCount: Int, rowCount: Int) {
         }
         print(row)
     }
-}
-
-func findMaxium(_ inputString: String, passCount: Int = 20) async -> Int {
-    async let maximum0 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum1 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum2 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum3 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum4 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum5 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum6 = findMaximumWorker(inputString, passCount: passCount)
-    async let maximum7 = findMaximumWorker(inputString, passCount: passCount)
-    
-    return max(await maximum0,
-               await maximum1,
-               await maximum2,
-               await maximum3,
-               await maximum4,
-               await maximum5,
-               await maximum6,
-               await maximum7)
-}
-
-@Sendable func findMaximumWorker(_ inputString: String, passCount: Int) async -> Int {
-    var maximum = 0
-    for i in  0 ..< passCount {
-        if i % 100 == 0 { print("Pass \(i) of \(passCount)") }
-        let map = Map(inputString)
-        let result = map.longestPath()
-        maximum = max(maximum, result)
-    }
-    return maximum
 }
