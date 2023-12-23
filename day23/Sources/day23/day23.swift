@@ -28,14 +28,46 @@ struct Map {
         startPosition = Vector2D(x: startX, y: 0)
         
         let endX = inputTiles[height - 1].firstIndex(of: ".")!
-        targetPosition = Vector2D(x: endX, y: 0)
+        targetPosition = Vector2D(x: endX, y: height - 1)
         
         self.tiles = tiles
     }
     
     func getNeighboursFor(_ node: Vector2D) -> [Vector2D] {
-        return node.neighbours
-            .filter { tiles.keys.contains($0) }
+        switch tiles[node] {
+        case ".":
+            return node.neighbours.filter { tiles[$0, default: "#"] != "#" }
+        case ">":
+            let right = node + Vector2D(x: 1, y: 0)
+            if tiles[right, default: "#"] != "#" {
+                return [right]
+            } else {
+                return []
+            }
+        case "<":
+            let left = node + Vector2D(x: -1, y: 0)
+            if tiles[left, default: "#"] != "#" {
+                return [left]
+            } else {
+                return []
+            }
+        case "^":
+            let up = node + Vector2D(x: 0, y: -1)
+            if tiles[up, default: "#"] != "#" {
+                return [up]
+            } else {
+                return []
+            }
+        case "v":
+            let down = node + Vector2D(x: 0, y: 1)
+            if tiles[down, default: "#"] != "#" {
+                return [down]
+            } else {
+                return []
+            }
+        default:
+            return []
+        }
     }
     
     func dijkstra2(target: Vector2D) -> [Vector2D: Int] {
@@ -54,7 +86,7 @@ struct Map {
                     unvisited.insert(neighbour)
                 }
                 let alt = dist[currentNode]! + 1
-                if alt < dist[neighbour, default: Int.max] {
+                if alt > dist[neighbour, default: Int.min] {
                     dist[neighbour] = alt
                 }
             }
@@ -62,7 +94,7 @@ struct Map {
             unvisited.remove(currentNode)
             visited.insert(currentNode)
             
-            if let newNode = unvisited.min(by: { dist[$0, default: Int.max] < dist[$1, default: Int.max] }) {
+            if let newNode = unvisited.max(by: { dist[$0, default: Int.min] < dist[$1, default: Int.min] }) {
                 currentNode = newNode
             }
         }
@@ -71,7 +103,27 @@ struct Map {
     
     func longestPath() -> Int {
         let dijkstra = dijkstra2(target: startPosition)
+        printDijkstra(tiles: dijkstra, colCount: width, rowCount: height)
         return dijkstra[targetPosition]!
     }
     
+}
+
+func printDijkstra(tiles: [Vector2D: Int], colCount: Int, rowCount: Int) {
+    for y in 0 ..< rowCount {
+        var row = "|"
+        for x in 0 ..< colCount {
+            let coord = Vector2D(x: x, y: y)
+            if let value = tiles[coord] {
+                if value > 100 {
+                    row += "##|"
+                } else {
+                    row += String(format: "%02d", value) + "|"
+                }
+            } else {
+                row += "  |"
+            }
+        }
+        print(row)
+    }
 }
