@@ -2,11 +2,37 @@ import XCTest
 @testable import day23
 
 final class day23Tests: XCTestCase {
-    func testExample() throws {
-        // XCTest Documentation
-        // https://developer.apple.com/documentation/xctest
-
-        // Defining Test Cases and Test Methods
-        // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
+    let exampleInput =
+    """
+    #.#####################
+    #.......#########...###
+    #######.#########.#.###
+    ###.....#.>.>.###.#.###
+    ###v#####.#v#.###.#.###
+    ###.>...#.#.#.....#...#
+    ###v###.#.#.#########.#
+    ###...#.#.#.......#...#
+    #####.#.#.#######.#.###
+    #.....#.#.#.......#...#
+    #.#####.#.#.#########v#
+    #.#...#...#...###...>.#
+    #.#.#v#######v###.###v#
+    #...#.>.#...>.>.#.###.#
+    #####v#.#.###v#.#.###.#
+    #.....#...#...#.#.#...#
+    #.#########.###.#.#.###
+    #...###...#...#...#.###
+    ###.###.#.###v#####v###
+    #...#...#.#.>.>.#.>.###
+    #.###.###.#.###.#.#v###
+    #.....###...###...#...#
+    #####################.#
+    """
+    
+    func test_longestPath_withExampleInput() {
+        let map = Map(exampleInput)
+        let result = map.longestPath()
+        XCTAssertEqual(result, 94)
+        
     }
 }
