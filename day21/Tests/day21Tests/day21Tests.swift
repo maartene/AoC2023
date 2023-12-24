@@ -48,22 +48,3 @@ final class day21Tests: XCTestCase {
         XCTAssertEqual(result, 617361073602319)
     }
 }
-
-func printDijkstra(tiles: [Vector2D: Int], colCount: Int, rowCount: Int) {
-    for y in 0 ..< rowCount {
-        var row = "|"
-        for x in 0 ..< colCount {
-            let coord = Vector2D(x: x, y: y)
-            if let value = tiles[coord] {
-                if value > 100 {
-                    row += "##|"
-                } else {
-                    row += String(format: "%02d", value) + "|"
-                }
-            } else {
-                row += "  |"
-            }
-        }
-        print(row)
-    }
-}
