@@ -12,6 +12,7 @@ Within each day project, you should create an `Input.swift` file where you add a
 
 - Day 10: My solution assumes the input is padded with one extra '.' at the top, left, bottom and right of the input matrix.
 - Day 23: This solution generates uses Dijkstra to generate valid paths, but not necesarrily the longest path. However, if you run it often enough and take the highest returned value. Eventually you will get lucky. This was my approach for part 1. For Part 2 I had to implemdent DFS and copy/paste it in a separate project because when running in test target, the stack overflowed. I'm not sure why, but I suspect it has something to do with how Xcode handles tests. The project ran for a couple of hours, each time showing when a new maximum was found. I eventually wound up just trying every value when I got a new maximum in the AoC site until the right one was found. Not the most elegant solution, but it netted me the stars. 🤷‍♂️ (I was actually busy writing up a solution that first creates a simplified graph while the DFS was running, but the right answer came before I could finish the more elegant solution.)
+- Day 24: I did Part 2 using SageMath. Just plugged in the values from my input. No idea how to solve this in pure Swift.
 
 ### Note
 

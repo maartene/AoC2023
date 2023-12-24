@@ -25,21 +25,6 @@ struct HailStone {
     }
     
     func intersectsXY(_ other: HailStone, searchArea: ClosedRange<Float80>) -> DVector2D? {
-        
-        // check for hailstones that are on the same line
-        // paralel lines on same segment have a dot product of -1 or 1
-        let dot_velocities = DVector2D.dot(velocity.xy.normalized, other.velocity.xy.normalized)
-        if dot_velocities == -1 || dot_velocities == 1 {
-            // same direction, but are they the same?
-            let line_from_one_to_the_other = (other.position.xy - position.xy).normalized
-            let dot_lineVelocity = DVector2D.dot(line_from_one_to_the_other, velocity.xy.normalized)
-            // again, the line from this hailstones position to the other hailstones position should be either the velocity or the inverse of the velocity. I.e. dot product should be -1 or 1.
-            if dot_lineVelocity == -1 || dot_lineVelocity == 1 {
-                // as the lines are the same, it doesn't really matter which position to return.
-                return position.xy
-            }
-        }
-        
         // Calculate intersection using function on https://en.wikipedia.org/wiki/Line–line_intersection
         // Points on the first line segment (this hailstone)
         let p1 = position.xy
@@ -63,26 +48,26 @@ struct HailStone {
         let py_nom = det_l1 * (p3.y - p4.y) - (p1.y - p2.y) * det_l2
         let py = py_nom / den
         
-        let p_intersect = DVector2D(x: px, y: py)
-        
         // checks
         // inside search area?
         guard searchArea.contains(px) && searchArea.contains(py) else {
-            print("Found intersection (\(px),\(py)), but outside of search range")
+            //print("Found intersection (\(px),\(py)), but outside of search range")
             return nil
         }
+        
+        let p_intersect = DVector2D(x: px, y: py)
         
         // in the future for this hailstone? (dot product > 0)
         let line1 = (p_intersect - position.xy).normalized
         guard DVector2D.dot(line1, velocity.xy.normalized) >= 0 else {
-            print("Found intersection (\(px),\(py)), but it's in the past for this hailstone")
+            //print("Found intersection (\(px),\(py)), but it's in the past for this hailstone")
             return nil
         }
         
         // in the future for the other hailstone? (dot product > 0)
         let line2 = (p_intersect - other.position.xy).normalized
-        guard DVector2D.dot(line2, velocity.xy.normalized) >= 0 else {
-            print("Found intersection (\(px),\(py)), but it's in the past for the other hailstone")
+        guard DVector2D.dot(line2, other.velocity.xy.normalized) >= 0 else {
+            //print("Found intersection (\(px),\(py)), but it's in the past for the other hailstone")
             return nil
         }
         
@@ -108,3 +93,46 @@ func intersectingHailStoneCount(_ inputString: String, searchArea: ClosedRange<F
     
     return count
 }
+
+// MARK: Part 2
+
+/// We need to find a solution for these equations:
+/// ```
+/// position_rock + velocity_rock * t1 == position_hail_1 + velocity_hail_1 * t1;
+/// position_rock + velocity_rock * t2 == position_hail_2 + velocity_hail_2 * t2;
+/// position_rock + velocity_rock * t3 == position_hail_3 + velocity_hail_3 * t3;
+/// ```
+/// Where each equation is a 3D vector equation. So they can be expanded into three separate equations:
+/// ```
+/// position_rock + velocity_rock * t1 == position_hail_1 + velocity_hail_1 * t1
+/// ```
+/// becomes:
+/// ````
+/// position_rock.x + velocity_rock.x * t1 == position_hail_1.x + velocity_hail_1.x * t1
+/// position_rock.y + velocity_rock.y * t1 == position_hail_1.y + velocity_hail_1.y * t1
+/// position_rock.z + velocity_rock.z * t1 == position_hail_1.z + velocity_hail_1.z * t1
+/// ```
+/// So 9 equations in total, with 9 unknowns:
+///     position_rock.x, position_rock.y, position_rock.z, 
+///     velocity_rock.x, velocity_rock.y, velocity_rock.z, 
+///     t1, t2, t3
+/// 
+/// I used a SageMath workbook to find the answer, as doing this in pure Swift seems like a chore
+/// And entering 18 formula's in Symbolabs single inputfield row is very fragile.
+///
+/// Here's the workbook code:
+/// ```
+/// var('x y z vx vy vz t1 t2 t3 ans')
+/// eq1 = x + (vx * t1) == 260346828765750 + (64 * t1)
+/// eq2 = y + (vy * t1) == 357833641339849 + (-114 * t1)
+/// eq3 = z + (vz * t1) == 229809969824403 + (106 * t1)
+/// eq4 = x + (vx * t2) == 340220726383465 + (-79 * t2)
+/// eq5 = y + (vy * t2) == 393110064924024 + (-61 * t2)
+/// eq6 = z + (vz * t2) == 226146987100003 + (158 * t2)
+/// eq7 = x + (vx * t3) == 11361697274707 + (328 * t3)
+/// eq8 = y + (vy * t3) == 101596061919750 + (162 * t3)
+/// eq9 = z + (vz * t3) == 46099495948720 + (333 * t3)
+/// eq10 = ans == x + y + z
+/// print(solve([eq1,eq2,eq3,eq4,eq5,eq6,eq7,eq8,eq9,eq10],x,y,z,vx,vy,vz,t1,t2,t3,ans))
+/// ```
+/// Maybe next year we have a Z3 variant for Swift?

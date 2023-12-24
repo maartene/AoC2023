@@ -103,31 +103,11 @@ final class day24Tests: XCTestCase {
         XCTAssertEqual(result, 2)
     }
     
-    func test_parallelLineSegementsOnSameLine_oppositeDirection() throws{
-        let hailstoneA = HailStone("1, 2, 0 @ 1, 2, 0")
-        let hailstoneB = HailStone("-1, -2, 0 @ -1, -2, 0")
-        
-        let result = try XCTUnwrap(hailstoneA.intersectsXY(hailstoneB, searchArea: (-10 ... 10)))
-        XCTAssertEqual(result, hailstoneA.position.xy)
-        
-    }
-    
-    func test_parallelLineSegementsOnSameLine_sameDirection() throws{
-        let hailstoneA = HailStone("1, 2, 0 @ 1, 2, 0")
-        let hailstoneB = HailStone("-1, -2, 0 @ 2, 4, 0")
-        
-        let result = try XCTUnwrap(hailstoneA.intersectsXY(hailstoneB, searchArea: (-10 ... 10)))
-        XCTAssertEqual(result, hailstoneA.position.xy)
-        
-    }
-    
     func test_part1() {
-        let result = intersectingHailStoneCount(input, searchArea: (200000000000000 ... 400000000000000))
-        print(result)
-        
-        // 12473 too low
-        // 12466 with Float80 - too low
-        // 12470 with Float80 and parallel line search - too low
+       let result = intersectingHailStoneCount(input, searchArea: (200000000000000 ... 400000000000000))
+        XCTAssertEqual(result, 20434)
     }
-//    
+    
+    // MARK: part 2
+    // Used a SageMath workbook
 }

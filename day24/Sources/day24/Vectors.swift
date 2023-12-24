@@ -65,6 +65,16 @@ struct DVector3D {
     var xy: DVector2D {
         DVector2D(x: x, y: y)
     }
+    
+    init(x: Float80, y: Float80, z: Float80) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
+    
+    init(x: Int, y: Int, z: Int) {
+        self.init(x: Float80(x), y: Float80(y), z: Float80(z))
+    }
 }
 
 extension DVector3D: Equatable { }
