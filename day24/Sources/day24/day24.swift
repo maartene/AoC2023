@@ -123,15 +123,15 @@ func intersectingHailStoneCount(_ inputString: String, searchArea: ClosedRange<F
 /// Here's the workbook code:
 /// ```
 /// var('x y z vx vy vz t1 t2 t3 ans')
-/// eq1 = x + (vx * t1) == 260346828765750 + (64 * t1)
-/// eq2 = y + (vy * t1) == 357833641339849 + (-114 * t1)
-/// eq3 = z + (vz * t1) == 229809969824403 + (106 * t1)
-/// eq4 = x + (vx * t2) == 340220726383465 + (-79 * t2)
-/// eq5 = y + (vy * t2) == 393110064924024 + (-61 * t2)
-/// eq6 = z + (vz * t2) == 226146987100003 + (158 * t2)
-/// eq7 = x + (vx * t3) == 11361697274707 + (328 * t3)
-/// eq8 = y + (vy * t3) == 101596061919750 + (162 * t3)
-/// eq9 = z + (vz * t3) == 46099495948720 + (333 * t3)
+/// eq1 = x + (vx * t1) == (input removed) + ( (input removed ) * t1)
+/// eq2 = y + (vy * t1) == (input removed) + ( (input removed ) * t1)
+/// eq3 = z + (vz * t1) == (input removed) + ( (input removed ) * t1)
+/// eq4 = x + (vx * t2) == (input removed) + ( (input removed ) * t2)
+/// eq5 = y + (vy * t2) == (input removed) + ( (input removed ) * t2)
+/// eq6 = z + (vz * t2) == (input removed) + ( (input removed ) * t2)
+/// eq7 = x + (vx * t3) == (input removed) + ( (input removed ) * t3)
+/// eq8 = y + (vy * t3) == (input removed) + ( (input removed ) * t3)
+/// eq9 = z + (vz * t3) == (input removed) + ( (input removed ) * t3)
 /// eq10 = ans == x + y + z
 /// print(solve([eq1,eq2,eq3,eq4,eq5,eq6,eq7,eq8,eq9,eq10],x,y,z,vx,vy,vz,t1,t2,t3,ans))
 /// ```
