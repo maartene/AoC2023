@@ -8,8 +8,8 @@
 import Foundation
 
 struct DVector2D {
-    let x: Float80
-    let y: Float80
+    let x: Double
+    let y: Double
     
     static var zero: DVector2D {
         return DVector2D(x: 0, y: 0)
@@ -23,23 +23,23 @@ struct DVector2D {
         DVector2D(x: v1.x - v2.x, y: v1.y - v2.y)
     }
     
-    static func *(_ v: DVector2D, _ scalar: Float80) -> DVector2D {
+    static func *(_ v: DVector2D, _ scalar: Double) -> DVector2D {
         DVector2D(x: v.x * scalar, y: v.y * scalar)
     }
     
-    static func /(_ v: DVector2D, _ scalar: Float80) -> DVector2D {
+    static func /(_ v: DVector2D, _ scalar: Double) -> DVector2D {
         DVector2D(x: v.x / scalar, y: v.y / scalar)
     }
     
-    static func det(_ p1: DVector2D, _ p2: DVector2D) -> Float80 {
+    static func det(_ p1: DVector2D, _ p2: DVector2D) -> Double {
         p1.x * p2.y - p1.y * p2.x
     }
     
-    static func dot(_ v1: DVector2D, _ v2: DVector2D) -> Float80 {
+    static func dot(_ v1: DVector2D, _ v2: DVector2D) -> Double {
         v1.x * v2.x + v1.y * v2.y
     }
     
-    var magnitude: Float80 {
+    var magnitude: Double {
         sqrt(x*x + y*y)
     }
     
@@ -54,9 +54,9 @@ extension DVector2D: Equatable { }
 extension DVector2D: Hashable { }
 
 struct DVector3D {
-    let x: Float80
-    let y: Float80
-    let z: Float80
+    let x: Double
+    let y: Double
+    let z: Double
     
     static var zero: DVector3D {
         DVector3D(x: 0, y: 0, z: 0)
@@ -66,14 +66,14 @@ struct DVector3D {
         DVector2D(x: x, y: y)
     }
     
-    init(x: Float80, y: Float80, z: Float80) {
+    init(x: Double, y: Double, z: Double) {
         self.x = x
         self.y = y
         self.z = z
     }
     
     init(x: Int, y: Int, z: Int) {
-        self.init(x: Float80(x), y: Float80(y), z: Float80(z))
+        self.init(x: Double(x), y: Double(y), z: Double(z))
     }
 }
 

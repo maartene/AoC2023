@@ -13,18 +13,18 @@ struct HailStone {
         let parts = inputString.split(separator: "@").map { String($0) }
         let positionString = parts[0]
         let positionParts = positionString.split(separator: ",").map { String($0) }
-        let positionNumbers = positionParts.compactMap { part in Float80(part.trimmingCharacters(in: .whitespaces)) }
+        let positionNumbers = positionParts.compactMap { part in Double(part.trimmingCharacters(in: .whitespaces)) }
         let position = DVector3D(x: positionNumbers[0], y: positionNumbers[1], z: positionNumbers[2])
         
         let velocityString = parts[1]
         let velocityParts = velocityString.split(separator: ",").map { String($0) }
-        let velocityNumbers = velocityParts.compactMap { part in Float80(part.trimmingCharacters(in: .whitespaces)) }
+        let velocityNumbers = velocityParts.compactMap { part in Double(part.trimmingCharacters(in: .whitespaces)) }
         let velocity = DVector3D(x: velocityNumbers[0], y: velocityNumbers[1], z: velocityNumbers[2])
         
         self.init(position: position, velocity: velocity)
     }
     
-    func intersectsXY(_ other: HailStone, searchArea: ClosedRange<Float80>) -> DVector2D? {
+    func intersectsXY(_ other: HailStone, searchArea: ClosedRange<Double>) -> DVector2D? {
         // Calculate intersection using function on https://en.wikipedia.org/wiki/Line–line_intersection
         // Points on the first line segment (this hailstone)
         let p1 = position.xy
@@ -77,7 +77,7 @@ struct HailStone {
 
 extension HailStone: Equatable { }
 
-func intersectingHailStoneCount(_ inputString: String, searchArea: ClosedRange<Float80>) -> Int {
+func intersectingHailStoneCount(_ inputString: String, searchArea: ClosedRange<Double>) -> Int {
     let hailstones = inputString.split(separator: "\n").map { String($0) }.map { HailStone($0) }
     var hailStonesToCheck = hailstones
     
