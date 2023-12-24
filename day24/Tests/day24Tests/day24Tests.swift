@@ -1,65 +1,6 @@
 import XCTest
 @testable import day24
 
-struct HailStone {
-    let position: DVector3D
-    let velocity: DVector3D
-    
-    init(position: DVector3D, velocity: DVector3D) {
-        self.position = position
-        self.velocity = velocity
-    }
-    
-    init(_ inputString: String) {
-        let parts = inputString.split(separator: "@").map { String($0) }
-        let positionString = parts[0]
-        let positionParts = positionString.split(separator: ",").map { String($0) }
-        let positionNumbers = positionParts.compactMap { part in Double(part.trimmingCharacters(in: .whitespaces)) }
-        let position = DVector3D(x: positionNumbers[0], y: positionNumbers[1], z: positionNumbers[2])
-        
-        let velocityString = parts[1]
-        let velocityParts = velocityString.split(separator: ",").map { String($0) }
-        let velocityNumbers = velocityParts.compactMap { part in Double(part.trimmingCharacters(in: .whitespaces)) }
-        let velocity = DVector3D(x: velocityNumbers[0], y: velocityNumbers[1], z: velocityNumbers[2])
-        
-        self.init(position: position, velocity: velocity)
-    }
-    
-    func intersectsXY(_ other: HailStone, searchArea: ClosedRange<Double>) -> DVector2D? {
-        // Points on the first line segment (this hailstone)
-        let p1 = position.xy
-        let p2 = position.xy + velocity.xy * 3
-        
-        // Points on the second line segment (other hailstone)
-        let p3 = other.position.xy
-        let p4 = other.position.xy + other.velocity.xy * 3
-        
-        
-        // Determinants of the line segments
-        let det_l1 = DVector2D.det(p1, p2)
-        let det_l2 = DVector2D.det(p3, p4)
-        
-        let den = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x)
-        
-        // X coordinate
-        let px_nom = det_l1 * (p3.x - p4.x) - (p1.x - p2.x) * det_l2
-        let px = px_nom / den
-        
-        // Y coordinate
-        let py_nom = det_l1 * (p3.y - p4.y) - (p1.y - p2.y) * det_l2
-        let py = py_nom / den
-        
-        // checks
-        // inside search area?
-        guard searchArea.contains(px) && searchArea.contains(py) else {
-            print("Found intersection (\(px),\(py)), but outside of search range")
-            return nil
-        }
-        
-        return DVector2D(x: px, y: py)
-    }
-}
-
 final class day24Tests: XCTestCase {
     let exampleInput =
     """
@@ -108,6 +49,13 @@ final class day24Tests: XCTestCase {
         XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
     }
     
+    func test_hailstone1_intersects_hailstone5_outsideSearchArea() throws {
+        let hailStoneA = HailStone("19, 13, 30 @ -2,  1, -2")
+        let hailStoneB = HailStone("20, 19, 15 @  1, -5, -3")
+        
+        XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
+    }
+    
     func test_hailstone2_neverIntersects_hailstone3() {
         let hailStoneA = HailStone("18, 19, 22 @ -1, -1, -2")
         let hailStoneB = HailStone("20, 25, 34 @ -2, -2, -4")
@@ -115,11 +63,71 @@ final class day24Tests: XCTestCase {
         XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
     }
     
-    func test_hailstone1_intersects_hailstone5_inThePast() {
-        let hailStoneA = HailStone("19, 13, 30 @ -2,  1, -2")
-        let hailStoneB = HailStone("20, 25, 34 @ -2, -2, -4")
+    func test_hailstone2_neverIntersects_hailstone4() {
+        let hailStoneA = HailStone("18, 19, 22 @ -1, -1, -2")
+        let hailStoneB = HailStone("12, 31, 28 @ -1, -2, -1")
         
         XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
     }
     
+    func test_hailstone2_intersects_hailstone5_inThePast() {
+        let hailStoneA = HailStone("18, 19, 22 @ -1, -1, -2")
+        let hailStoneB = HailStone("20, 19, 15 @  1, -5, -3")
+        
+        XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
+    }
+    
+    func test_hailstone3_intersects_hailstone4_inThePast() {
+        let hailStoneA = HailStone("20, 25, 34 @ -2, -2, -4")
+        let hailStoneB = HailStone("12, 31, 28 @ -1, -2, -1")
+        
+        XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
+    }
+    
+    func test_hailstone3_intersects_hailstone5_inThePast() {
+        let hailStoneA = HailStone("20, 25, 34 @ -2, -2, -4")
+        let hailStoneB = HailStone("20, 19, 15 @ 1, -5, -3")
+        
+        XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
+    }
+    
+    func test_hailstone4_intersects_hailstone5_inThePast() {
+        let hailStoneA = HailStone("12, 31, 28 @ -1, -2, -1")
+        let hailStoneB = HailStone("20, 19, 15 @ 1, -5, -3")
+        
+        XCTAssertNil(hailStoneA.intersectsXY(hailStoneB, searchArea: (7.0 ... 27.000)))
+    }
+    
+    func test_intersectingHailStones_withExampleInput() {
+        let result = intersectingHailStoneCount(exampleInput, searchArea: (7.0 ... 27.000))
+        XCTAssertEqual(result, 2)
+    }
+    
+    func test_parallelLineSegementsOnSameLine_oppositeDirection() throws{
+        let hailstoneA = HailStone("1, 2, 0 @ 1, 2, 0")
+        let hailstoneB = HailStone("-1, -2, 0 @ -1, -2, 0")
+        
+        let result = try XCTUnwrap(hailstoneA.intersectsXY(hailstoneB, searchArea: (-10 ... 10)))
+        XCTAssertEqual(result, hailstoneA.position.xy)
+        
+    }
+    
+    func test_parallelLineSegementsOnSameLine_sameDirection() throws{
+        let hailstoneA = HailStone("1, 2, 0 @ 1, 2, 0")
+        let hailstoneB = HailStone("-1, -2, 0 @ 2, 4, 0")
+        
+        let result = try XCTUnwrap(hailstoneA.intersectsXY(hailstoneB, searchArea: (-10 ... 10)))
+        XCTAssertEqual(result, hailstoneA.position.xy)
+        
+    }
+    
+    func test_part1() {
+        let result = intersectingHailStoneCount(input, searchArea: (200000000000000 ... 400000000000000))
+        print(result)
+        
+        // 12473 too low
+        // 12466 with Float80 - too low
+        // 12470 with Float80 and parallel line search - too low
+    }
+//    
 }
